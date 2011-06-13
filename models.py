@@ -91,7 +91,7 @@ class Person(models.Model):
 
     programs = models.ManyToManyField(Program)
 
-    shirt_size = models.CharField("Shirt Size", max_length="3", blank=True,
+    shirt_size = models.CharField("Shirt Size", max_length=3, blank=True,
                                   choices=(
         ('S', "Small"),
         ('M', "Medium"),
@@ -108,11 +108,11 @@ class Person(models.Model):
 
     emergency_contact = models.ForeignKey('self', null=True)
     emergency_contact_relation = \
-            models.CharField("Emergency Contact Relation", max_length="30",
+            models.CharField("Emergency Contact Relation", max_length=30,
                              blank=True)
 
     prospective_source = models.CharField("Prospective Source",
-                                          max_length="255", blank=True)
+                                          max_length=255, blank=True)
 
     comments = models.TextField("Comments", blank=True)
 
@@ -120,7 +120,7 @@ class Person(models.Model):
     contact_public = models.BooleanField("Public Contact Info")
 
     lead = models.BooleanField("Lead", default=False)
-    position = models.CharField("Position", max_length="50", blank=True)
+    position = models.CharField("Position", max_length=50, blank=True)
 
     emails = models.ManyToManyField(Email, through='PersonEmail')
     addresses = models.ManyToManyField(Address)
@@ -165,7 +165,7 @@ class Student(models.Model):
 class Relationship(models.Model):
     student = models.ForeignKey(Student)
     adult = models.ForeignKey(Adult)
-    relationship = models.CharField("Relationship", max_length="30")
+    relationship = models.CharField("Relationship", max_length=30)
     cc_on_email = models.BooleanField("CC on Emails", default=False)
 
 class FeePaid(models.Model):
