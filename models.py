@@ -7,6 +7,9 @@ class Organization(models.Model):
     def __unicode__(self):
         return self.name
 
+    class Meta:
+        ordering = ['name']
+
 class Program(models.Model):
     name = models.CharField("Name", max_length=20, unique=True)
     longname = models.CharField("Long name", max_length=50)
@@ -14,6 +17,9 @@ class Program(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    class Meta:
+        ordering = ['name']
 
 class School(models.Model):
     name = models.CharField("Name", max_length=20, unique=True)
@@ -28,6 +34,9 @@ class School(models.Model):
     def __unicode__(self):
         return "%s" % self.longname
 
+    class Meta:
+        ordering = ['type', 'longname']
+
 class Company(models.Model):
     name = models.CharField("Name", max_length=20, unique=True)
     longname = models.CharField("Long name", max_length=50)
@@ -37,6 +46,7 @@ class Company(models.Model):
 
     class Meta:
         verbose_name_plural = "Companies"
+        ordering = ['name']
 
 class Email(models.Model):
     email = models.EmailField("Email", max_length=255, unique=True)
@@ -49,15 +59,19 @@ class Email(models.Model):
     def __unicode__(self):
         return self.email
 
+    class Meta:
+        ordering = ['email']
+
 class Address(models.Model):
     line1 = models.CharField("Line 1", max_length=50)
-    line2 = models.CharField("Line 2", max_length=50)
+    line2 = models.CharField("Line 2", max_length=50, blank=True)
     city = models.CharField("City", max_length=50)
     state = models.CharField("State", max_length=2)
-    zipcode = models.CharField("Zip Code", max_length=10)
+    zipcode = models.CharField("Zip Code", max_length=10, blank=True)
 
     class Meta:
         verbose_name_plural = "Addresses"
+        ordering = ['state', 'city', 'line1']
 
 class Phone(models.Model):
     phone = models.CharField("Phone Number", max_length=30, unique=True)
@@ -67,6 +81,12 @@ class Phone(models.Model):
         ('work', "Work"),
         ('other', "Other"),
     ))
+
+    def __unicode__(self):
+        return self.phone
+
+    class Meta:
+        ordering = ['phone']
 
 class Person(models.Model):
     badge = models.IntegerField("Badge Number", unique=True, null=True)
@@ -131,6 +151,7 @@ class Person(models.Model):
 
     class Meta:
         verbose_name_plural = "People"
+        ordering = ['lastname', 'firstname']
 
 class PersonEmail(models.Model):
     person = models.ForeignKey(Person)
