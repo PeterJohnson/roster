@@ -83,17 +83,18 @@ class Phone(models.Model):
     ))
 
     def __unicode__(self):
-        return self.phone
+        return "%s (%s)" % (self.phone, self.get_location_display())
 
     class Meta:
         ordering = ['phone']
 
 class Person(models.Model):
-    badge = models.IntegerField("Badge Number", unique=True, null=True)
+    badge = models.IntegerField("Badge Number", unique=True, null=True,
+                                blank=True)
 
     firstname = models.CharField("First Name", max_length=100)
     lastname = models.CharField("Last Name", max_length=100)
-    suffix = models.CharField("Suffix", max_length=10)
+    suffix = models.CharField("Suffix", max_length=10, blank=True)
 
     gender = models.CharField("Gender", max_length=2, choices=(
         ('M', "Male"),
@@ -109,7 +110,7 @@ class Person(models.Model):
         ('contact', "Contact Only"),
     ))
 
-    programs = models.ManyToManyField(Program)
+    programs = models.ManyToManyField(Program, blank=True)
 
     shirt_size = models.CharField("Shirt Size", max_length=3, blank=True,
                                   choices=(
@@ -122,11 +123,11 @@ class Person(models.Model):
     medical = models.TextField("Medical Concerns", blank=True)
     medications = models.TextField("Medications", blank=True)
 
-    joined = models.DateField("Joined team", null=True)
-    left = models.DateField("Left team", null=True)
-    birthdate = models.DateField("Birthdate", null=True)
+    joined = models.DateField("Joined team", null=True, blank=True)
+    left = models.DateField("Left team", null=True, blank=True)
+    birthdate = models.DateField("Birthdate", null=True, blank=True)
 
-    emergency_contact = models.ForeignKey('self', null=True)
+    emergency_contact = models.ForeignKey('self', null=True, blank=True)
     emergency_contact_relation = \
             models.CharField("Emergency Contact Relation", max_length=30,
                              blank=True)
@@ -136,15 +137,15 @@ class Person(models.Model):
 
     comments = models.TextField("Comments", blank=True)
 
-    receive_email = models.BooleanField("Receive Email")
+    receive_email = models.BooleanField("Receive Email", default=True)
     contact_public = models.BooleanField("Public Contact Info")
 
     lead = models.BooleanField("Lead", default=False)
     position = models.CharField("Position", max_length=50, blank=True)
 
-    emails = models.ManyToManyField(Email, through='PersonEmail')
-    addresses = models.ManyToManyField(Address)
-    phones = models.ManyToManyField(Phone, through='PersonPhone')
+    emails = models.ManyToManyField(Email, through='PersonEmail', blank=True)
+    addresses = models.ManyToManyField(Address, blank=True)
+    phones = models.ManyToManyField(Phone, through='PersonPhone', blank=True)
 
     def __unicode__(self):
         return "%s, %s" % (self.lastname, self.firstname)
@@ -174,7 +175,7 @@ class Adult(models.Model):
         ('parent', "Parent"),
         ('volunteer', "Volunteer"),
     ))
-    company = models.ForeignKey(Company, null=True)
+    company = models.ForeignKey(Company, null=True, blank=True)
     mentor = models.BooleanField("Is Mentor", help_text="Is a mentor")
 
 class Student(models.Model):
@@ -200,7 +201,7 @@ class TimeRecord(models.Model):
     person = models.ForeignKey(Person)
     location = models.CharField("Location", max_length=80)
     clock_in = models.DateTimeField("Clocked in")
-    clock_out = models.DateTimeField("Clocked out", null=True)
+    clock_out = models.DateTimeField("Clocked out", null=True, blank=True)
     hours = models.FloatField("Hours")
     recorded = models.DateField("Recorded")
 
