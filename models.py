@@ -24,11 +24,11 @@ class Program(models.Model):
 class School(models.Model):
     name = models.CharField("Name", max_length=20, unique=True)
     longname = models.CharField("Long name", max_length=50)
-    type = models.CharField("Type", max_length=20, choices=(
-        ('elementary', "Elementary School"),
-        ('middle', "Middle School"),
-        ('high', "High School"),
-        ('home', "Homeschool"),
+    type = models.IntegerField("Type", choices=(
+        (0, "Elementary School"),
+        (1, "Middle School"),
+        (2, "High School"),
+        (3, "Homeschool"),
     ))
 
     def __unicode__(self):
@@ -68,6 +68,9 @@ class Address(models.Model):
     city = models.CharField("City", max_length=50)
     state = models.CharField("State", max_length=2)
     zipcode = models.CharField("Zip Code", max_length=10, blank=True)
+
+    def __unicode__(self):
+        return "%s, %s, %s" % (self.line1, self.city, self.state)
 
     class Meta:
         verbose_name_plural = "Addresses"
@@ -127,7 +130,7 @@ class Person(models.Model):
     left = models.DateField("Left team", null=True, blank=True)
     birthdate = models.DateField("Birthdate", null=True, blank=True)
 
-    emergency_contact = models.ForeignKey('self', null=True, blank=True)
+    emergency_contact = models.ForeignKey('Adult', null=True, blank=True)
     emergency_contact_relation = \
             models.CharField("Emergency Contact Relation", max_length=30,
                              blank=True)
@@ -169,17 +172,15 @@ class Waiver(models.Model):
     org = models.ForeignKey(Organization)
     year = models.IntegerField("Year")
 
-class Adult(models.Model):
-    person = models.ForeignKey(Person)
+class Adult(Person):
     role = models.CharField("Role", max_length=10, choices=(
         ('parent', "Parent"),
         ('volunteer', "Volunteer"),
     ))
     company = models.ForeignKey(Company, null=True, blank=True)
-    mentor = models.BooleanField("Is Mentor", help_text="Is a mentor")
+    mentor = models.BooleanField("Is Mentor")
 
-class Student(models.Model):
-    person = models.ForeignKey(Person)
+class Student(Person):
     school = models.ForeignKey(School)
     grad_year = models.IntegerField("Graduation Year")
     relationships = models.ManyToManyField(Adult, through='Relationship')
