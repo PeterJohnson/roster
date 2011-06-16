@@ -1,5 +1,19 @@
 from django.contrib import admin
+from django import forms
 from roster.models import *
+
+class TeamAdmin(admin.ModelAdmin):
+    list_display = ['name', 'program']
+
+class PersonInline(admin.TabularInline):
+    model = Person
+    extra = 1
+
+class PositionAdmin(admin.ModelAdmin):
+    list_display = ['title', 'steering']
+    list_filter = ['steering']
+    inlines = [PersonInline]
+    #fieldsets = [(None, {'fields': ['title', 'steering', 'people']})]
 
 class SchoolAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'name', 'type']
@@ -61,49 +75,59 @@ class RelationshipInline(admin.TabularInline):
     verbose_name_plural = 'Relationships'
 
 class AdultAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', 'lastname', 'firstname', 'lead', 'role',
+    list_display = ['__unicode__', 'lastname', 'firstname', 'role',
                     'mentor', 'company', 'status']
-    list_filter = ['status', 'lead', 'programs', 'role', 'mentor', 'company']
+    list_filter = ['status', 'teams', 'role', 'mentor', 'company']
     inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline,
                RelationshipInline]
     exclude = ['addresses']
     radio_fields = {'gender': admin.HORIZONTAL}
     fieldsets = [
         (None, {'fields': ['firstname', 'lastname', 'suffix', 'gender',
-                           'status', 'company', 'role', 'mentor', 'programs',
+                           'birthdate', 'company', 'role', 'mentor',
+                           'status', 'teams',
                            'badge', 'joined', 'left', 'receive_email',
-                           'contact_public', 'lead', 'position']}),
+                           'contact_public']}),
         ('Medical information', {'fields': ['medical', 'medications'],
                                  'classes': ['collapse']}),
         ('Emergency information', {'fields': ['emergency_contact',
                                               'emergency_contact_relation'],
                                    'classes': ['collapse']}),
-        ('Misc information', {'fields': ['shirt_size', 'birthdate',
-                                         'prospective_source', 'comments'],
+        ('Misc information', {'fields': ['shirt_size',
+                                         'prospective_source',
+                                         'comments'],
                               'classes': ['collapse']}),
     ]
 
+class StudentAdminForm(forms.ModelForm):
+    class Meta:
+        model = Student
+
+    def __init__(self, *args, **kwargs):
+        super(StudentAdminForm, self).__init__(*args, **kwargs)
+        self.fields['birthdate'].required = True
+
 class StudentAdmin(admin.ModelAdmin):
+    form = StudentAdminForm
     list_display = ['__unicode__', 'lastname', 'firstname', 'school',
                     'grad_year', 'status']
-    list_filter = ['status', 'lead', 'programs', 'school', 'grad_year']
+    list_filter = ['status', 'teams', 'school', 'grad_year']
     inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline,
                RelationshipInline]
     exclude = ['addresses']
     radio_fields = {'gender': admin.HORIZONTAL}
     fieldsets = [
         (None, {'fields': ['firstname', 'lastname', 'suffix', 'gender',
-                           'status', 'school', 'grad_year', 'programs',
-                           'badge', 'joined', 'left', 'waitlist_date',
-                           'receive_email', 'contact_public',
-                           'lead', 'position']}),
+                           'birthdate', 'school', 'grad_year', 'status',
+                           'joined', 'badge', 'teams', 'left',
+                           'receive_email', 'contact_public']}),
         ('Medical information', {'fields': ['medical', 'medications'],
                                  'classes': ['collapse']}),
         ('Emergency information', {'fields': ['emergency_contact',
                                               'emergency_contact_relation'],
                                    'classes': ['collapse']}),
-        ('Misc information', {'fields': ['shirt_size', 'birthdate',
-                                         'prospective_source', 'comments'],
+        ('Misc information', {'fields': ['shirt_size', 'prospective_source',
+                                         'comments'],
                               'classes': ['collapse']}),
     ]
 
@@ -116,20 +140,40 @@ class FeePaidAdmin(admin.ModelAdmin):
     list_filter = ['year', 'student']
 
 class TimeRecordAdmin(admin.ModelAdmin):
-    list_display = ['person', 'location', 'clock_in', 'clock_out', 'hours',
+    list_display = ['person', 'event', 'clock_in', 'clock_out', 'hours',
                     'recorded']
-    list_filter = ['location', 'clock_in', 'recorded', 'person']
+    list_filter = ['event', 'clock_in', 'recorded', 'person']
+
+class WaitlistEntryAdmin(admin.ModelAdmin):
+    list_display = ['student', 'program', 'team', 'date']
+    list_filter = ['program', 'team']
+
+class EventPersonInline(admin.TabularInline):
+    model = EventPerson
+    extra = 1
+    verbose_name = 'Person'
+    verbose_name_plural = 'People'
+
+class EventAdmin(admin.ModelAdmin):
+    list_display = ['name', 'location', 'date', 'time']
+    list_filter = ['location', 'date']
+    inlines = [EventPersonInline]
 
 admin.site.register(Organization)
 admin.site.register(Program)
+admin.site.register(Team, TeamAdmin)
+admin.site.register(Position, PositionAdmin)
 admin.site.register(School, SchoolAdmin)
 admin.site.register(Company)
 admin.site.register(Email, EmailAdmin)
 admin.site.register(Address, AddressAdmin)
 admin.site.register(Phone, PhoneAdmin)
+admin.site.register(RelationshipType)
 admin.site.register(Waiver, WaiverAdmin)
 admin.site.register(Adult, AdultAdmin)
 admin.site.register(Student, StudentAdmin)
 admin.site.register(FeePaid, FeePaidAdmin)
 admin.site.register(TimeRecord, TimeRecordAdmin)
+admin.site.register(WaitlistEntry, WaitlistEntryAdmin)
+admin.site.register(Event, EventAdmin)
 
