@@ -23,6 +23,7 @@ class AddressPersonInline(admin.TabularInline):
 
 class AddressAdmin(admin.ModelAdmin):
     list_display = ['line1', 'city', 'state', 'zipcode']
+    list_filter = ['city', 'state', 'zipcode']
     #inlines = [AddressPersonInline]
 
 class PhonePersonInline(admin.TabularInline):
@@ -54,18 +55,24 @@ class PersonPhoneInline(admin.TabularInline):
     verbose_name = 'Phone number'
     verbose_name_plural = 'Phone numbers'
 
+class RelationshipInline(admin.TabularInline):
+    model = Relationship
+    extra = 1
+    verbose_name_plural = 'Relationships'
+
 class AdultAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', 'lastname', 'firstname', 'mentor',
-                    'company', 'status']
-    list_filter = ['status', 'lead', 'programs', 'mentor', 'company']
-    inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline]
+    list_display = ['__unicode__', 'lastname', 'firstname', 'lead', 'role',
+                    'mentor', 'company', 'status']
+    list_filter = ['status', 'lead', 'programs', 'role', 'mentor', 'company']
+    inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline,
+               RelationshipInline]
     exclude = ['addresses']
     radio_fields = {'gender': admin.HORIZONTAL}
     fieldsets = [
         (None, {'fields': ['firstname', 'lastname', 'suffix', 'gender',
-                           'status', 'company', 'mentor', 'badge', 'joined',
-                           'left', 'receive_email', 'contact_public',
-                           'lead', 'position']}),
+                           'status', 'company', 'role', 'mentor', 'programs',
+                           'badge', 'joined', 'left', 'receive_email',
+                           'contact_public', 'lead', 'position']}),
         ('Medical information', {'fields': ['medical', 'medications'],
                                  'classes': ['collapse']}),
         ('Emergency information', {'fields': ['emergency_contact',
@@ -75,11 +82,6 @@ class AdultAdmin(admin.ModelAdmin):
                                          'prospective_source', 'comments'],
                               'classes': ['collapse']}),
     ]
-
-class RelationshipInline(admin.TabularInline):
-    model = Relationship
-    extra = 1
-    verbose_name_plural = 'Relationships'
 
 class StudentAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'lastname', 'firstname', 'school',
@@ -91,8 +93,8 @@ class StudentAdmin(admin.ModelAdmin):
     radio_fields = {'gender': admin.HORIZONTAL}
     fieldsets = [
         (None, {'fields': ['firstname', 'lastname', 'suffix', 'gender',
-                           'status', 'school', 'grad_year',
-                           'badge', 'joined', 'left',
+                           'status', 'school', 'grad_year', 'programs',
+                           'badge', 'joined', 'left', 'waitlist_date',
                            'receive_email', 'contact_public',
                            'lead', 'position']}),
         ('Medical information', {'fields': ['medical', 'medications'],
@@ -107,11 +109,11 @@ class StudentAdmin(admin.ModelAdmin):
 
 class WaiverAdmin(admin.ModelAdmin):
     list_display = ['person', 'org', 'year']
-    list_filter = ['person', 'org', 'year']
+    list_filter = ['org', 'year', 'person']
 
 class FeePaidAdmin(admin.ModelAdmin):
     list_display = ['student', 'year']
-    list_filter = ['student', 'year']
+    list_filter = ['year', 'student']
 
 class TimeRecordAdmin(admin.ModelAdmin):
     list_display = ['person', 'location', 'clock_in', 'clock_out', 'hours',

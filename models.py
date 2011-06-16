@@ -51,9 +51,9 @@ class Company(models.Model):
 class Email(models.Model):
     email = models.EmailField("Email", max_length=255, unique=True)
     location = models.CharField("Location", max_length=10, choices=(
-        ('home', "Home"),
-        ('work', "Work"),
-        ('other', "Other"),
+        ('Home', "Home"),
+        ('Work', "Work"),
+        ('Other', "Other"),
     ))
 
     def __unicode__(self):
@@ -79,10 +79,10 @@ class Address(models.Model):
 class Phone(models.Model):
     phone = models.CharField("Phone Number", max_length=30, unique=True)
     location = models.CharField("Location", max_length=10, choices=(
-        ('home', "Home"),
-        ('cell', "Cell"),
-        ('work', "Work"),
-        ('other', "Other"),
+        ('Home', "Home"),
+        ('Mobile', "Mobile"),
+        ('Work', "Work"),
+        ('Other', "Other"),
     ))
 
     def __unicode__(self):
@@ -105,12 +105,12 @@ class Person(models.Model):
     ))
 
     status = models.CharField("Status", max_length=20, choices=(
-        ('tooyoung', "Too Young"),
-        ('prospective', "Prospective"),
-        ('active', "Active"),
-        ('alumnus', "Alumnus"),
-        ('disinterested', "Disinterested"),
-        ('contact', "Contact Only"),
+        ('Too Young', "Too Young"),
+        ('Prospective', "Prospective"),
+        ('Active', "Active"),
+        ('Alumnus', "Alumnus"),
+        ('Disinterested', "Disinterested"),
+        ('Contact', "Contact Only"),
     ))
 
     programs = models.ManyToManyField(Program, blank=True)
@@ -143,8 +143,8 @@ class Person(models.Model):
     receive_email = models.BooleanField("Receive Email", default=True)
     contact_public = models.BooleanField("Public Contact Info")
 
-    lead = models.BooleanField("Lead", default=False)
-    position = models.CharField("Position", max_length=50, blank=True)
+    lead = models.BooleanField(default=False)
+    position = models.CharField(max_length=50, blank=True)
 
     emails = models.ManyToManyField(Email, through='PersonEmail', blank=True)
     addresses = models.ManyToManyField(Address, blank=True)
@@ -174,15 +174,17 @@ class Waiver(models.Model):
 
 class Adult(Person):
     role = models.CharField("Role", max_length=10, choices=(
-        ('parent', "Parent"),
-        ('volunteer', "Volunteer"),
+        ('Contact', "Contact"),
+        ('Parent', "Parent"),
+        ('Volunteer', "Volunteer"),
     ))
     company = models.ForeignKey(Company, null=True, blank=True)
-    mentor = models.BooleanField("Is Mentor")
+    mentor = models.BooleanField(default=False)
 
 class Student(Person):
-    school = models.ForeignKey(School)
-    grad_year = models.IntegerField("Graduation Year")
+    school = models.ForeignKey(School, null=True)
+    grad_year = models.IntegerField("Graduation year", null=True)
+    waitlist_date = models.DateField("Wait list date", null=True, blank=True)
     relationships = models.ManyToManyField(Adult, through='Relationship')
 
 class Relationship(models.Model):
@@ -193,7 +195,9 @@ class Relationship(models.Model):
 
 class FeePaid(models.Model):
     student = models.ForeignKey(Student)
-    year = models.IntegerField("Year")
+    year = models.IntegerField()
+    amount = models.DecimalField(decimal_places=2, max_digits=5, null=True,
+                                 blank=True)
 
     class Meta:
         verbose_name_plural = "Fees paid"
