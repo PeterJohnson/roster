@@ -71,8 +71,16 @@ class PersonPhoneInline(admin.TabularInline):
 
 class RelationshipInline(admin.TabularInline):
     model = Relationship
+    fk_name = 'person_from'
     extra = 1
     verbose_name_plural = 'Relationships'
+
+class PersonAdmin(admin.ModelAdmin):
+    list_display = ['__unicode__', 'lastname', 'firstname']
+    inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline,
+               RelationshipInline]
+    exclude = ['addresses']
+    radio_fields = {'gender': admin.HORIZONTAL}
 
 class AdultAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'lastname', 'firstname', 'role',
@@ -84,15 +92,13 @@ class AdultAdmin(admin.ModelAdmin):
     radio_fields = {'gender': admin.HORIZONTAL}
     fieldsets = [
         (None, {'fields': ['firstname', 'lastname', 'suffix', 'gender',
-                           'birthdate', 'company', 'role', 'mentor',
+                           ('birth_month', 'birth_day', 'birth_year'),
+                           'company', 'role', 'mentor',
                            'status', 'teams',
                            'badge', 'joined', 'left', 'receive_email',
                            'contact_public']}),
         ('Medical information', {'fields': ['medical', 'medications'],
                                  'classes': ['collapse']}),
-        ('Emergency information', {'fields': ['emergency_contact',
-                                              'emergency_contact_relation'],
-                                   'classes': ['collapse']}),
         ('Misc information', {'fields': ['shirt_size',
                                          'prospective_source',
                                          'comments'],
@@ -105,7 +111,9 @@ class StudentAdminForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(StudentAdminForm, self).__init__(*args, **kwargs)
-        self.fields['birthdate'].required = True
+        self.fields['birth_year'].required = True
+        self.fields['birth_month'].required = True
+        self.fields['birth_day'].required = True
 
 class StudentAdmin(admin.ModelAdmin):
     form = StudentAdminForm
@@ -118,14 +126,12 @@ class StudentAdmin(admin.ModelAdmin):
     radio_fields = {'gender': admin.HORIZONTAL}
     fieldsets = [
         (None, {'fields': ['firstname', 'lastname', 'suffix', 'gender',
-                           'birthdate', 'school', 'grad_year', 'status',
+                           ('birth_month', 'birth_day', 'birth_year'),
+                           ('school', 'grad_year'), 'status',
                            'joined', 'badge', 'teams', 'left',
                            'receive_email', 'contact_public']}),
         ('Medical information', {'fields': ['medical', 'medications'],
                                  'classes': ['collapse']}),
-        ('Emergency information', {'fields': ['emergency_contact',
-                                              'emergency_contact_relation'],
-                                   'classes': ['collapse']}),
         ('Misc information', {'fields': ['shirt_size', 'prospective_source',
                                          'comments'],
                               'classes': ['collapse']}),
@@ -170,6 +176,7 @@ admin.site.register(Address, AddressAdmin)
 admin.site.register(Phone, PhoneAdmin)
 admin.site.register(RelationshipType)
 admin.site.register(Waiver, WaiverAdmin)
+admin.site.register(Person, PersonAdmin)
 admin.site.register(Adult, AdultAdmin)
 admin.site.register(Student, StudentAdmin)
 admin.site.register(FeePaid, FeePaidAdmin)

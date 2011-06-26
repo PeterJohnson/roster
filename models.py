@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, IntegrityError
 
 # Base models
 class Organization(models.Model):
@@ -116,17 +116,34 @@ class RelationshipType(models.Model):
         return self.type
 
 class Person(models.Model):
-    badge = models.IntegerField("Badge Number", unique=True, null=True,
-                                blank=True)
-
     firstname = models.CharField("First Name", max_length=100)
     lastname = models.CharField("Last Name", max_length=100)
     suffix = models.CharField("Suffix", max_length=10, blank=True)
 
-    gender = models.CharField("Gender", max_length=2, choices=(
+    gender = models.CharField("Gender", max_length=1, choices=(
         ('M', "Male"),
         ('F', "Female"),
     ))
+
+    emails = models.ManyToManyField(Email, through='PersonEmail', blank=True)
+    addresses = models.ManyToManyField(Address, blank=True)
+    phones = models.ManyToManyField(Phone, through='PersonPhone', blank=True)
+
+    def __unicode__(self):
+        if self.suffix:
+            return "%s, %s (%s)" % (self.lastname, self.firstname,
+                                    self.suffix)
+        else:
+            return "%s, %s" % (self.lastname, self.firstname)
+
+    class Meta:
+        verbose_name_plural = "People"
+        ordering = ['lastname', 'firstname']
+        unique_together = ['firstname', 'lastname', 'suffix']
+
+class Member(Person):
+    badge = models.IntegerField("Badge Number", unique=True, null=True,
+                                blank=True)
 
     status = models.CharField("Status", max_length=20, choices=(
         ('Too Young', "Too Young"),
@@ -134,7 +151,6 @@ class Person(models.Model):
         ('Active', "Active"),
         ('Alumnus', "Alumnus"),
         ('Disinterested', "Disinterested"),
-        ('Contact', "Contact Only"),
     ))
 
     teams = models.ManyToManyField(Team, blank=True)
@@ -152,11 +168,10 @@ class Person(models.Model):
 
     joined = models.DateField("Joined team", null=True, blank=True)
     left = models.DateField("Left team", null=True, blank=True)
-    birthdate = models.DateField("Birthdate", null=True, blank=True)
 
-    emergency_contact = models.ForeignKey('Adult', null=True, blank=True)
-    emergency_contact_relation = models.ForeignKey('RelationshipType',
-                                                   null=True, blank=True)
+    birth_year = models.IntegerField(null=True, blank=True)
+    birth_month = models.IntegerField(null=True, blank=True)
+    birth_day = models.IntegerField(null=True, blank=True)
 
     prospective_source = models.CharField("Prospective Source",
                                           max_length=255, blank=True)
@@ -167,17 +182,6 @@ class Person(models.Model):
     contact_public = models.BooleanField("Release Contact Info")
 
     position = models.ForeignKey(Position, null=True, blank=True)
-
-    emails = models.ManyToManyField(Email, through='PersonEmail', blank=True)
-    addresses = models.ManyToManyField(Address, blank=True)
-    phones = models.ManyToManyField(Phone, through='PersonPhone', blank=True)
-
-    def __unicode__(self):
-        return "%s, %s" % (self.lastname, self.firstname)
-
-    class Meta:
-        verbose_name_plural = "People"
-        ordering = ['lastname', 'firstname']
 
 class PersonEmail(models.Model):
     person = models.ForeignKey(Person)
@@ -194,25 +198,63 @@ class Waiver(models.Model):
     org = models.ForeignKey(Organization)
     year = models.IntegerField("Year")
 
-class Adult(Person):
+class Adult(Member):
     role = models.CharField("Role", max_length=10, choices=(
-        ('Contact', "Contact"),
         ('Parent', "Parent"),
         ('Volunteer', "Volunteer"),
     ))
     company = models.ForeignKey(Company, null=True, blank=True)
     mentor = models.BooleanField(default=False)
 
-class Student(Person):
+    def add_child(self, student):
+        student.add_parent(self)
+
+class Student(Member):
     school = models.ForeignKey(School, null=True)
     grad_year = models.IntegerField("Graduation year", null=True)
-    relationships = models.ManyToManyField(Adult, through='Relationship')
+
+    def add_parent(self, adult, relationship=None, cc_on_email=False):
+        if relationship is None:
+            if adult.gender == "F":
+                relationship = RelationshipType.objects.get(type="Mother")
+            elif adult.gender == "M":
+                relationship = RelationshipType.objects.get(type="Father")
+            else:
+                relationship = RelationshipType.objects.get(type="Parent")
+
+        # Student->Parent
+        try:
+            r = Relationship(person_from=self,
+                             person_to=adult,
+                             relationship=relationship,
+                             cc_on_email=cc_on_email)
+            r.save()
+        except IntegrityError:
+            pass
+
+        # Parent->Student
+        try:
+            r = Relationship(person_from=adult,
+                             person_to=self,
+                             relationship=RelationshipType.objects.get(type="Child"),
+                             cc_on_email=False)
+            r.save()
+        except IntegrityError:
+            pass
+
+        # Siblings
+        siblings = Relationship.objects.filter(person_from=adult, relationship=RelationshipType.objects.get(type="Child"))
 
 class Relationship(models.Model):
-    student = models.ForeignKey(Student)
-    adult = models.ForeignKey(Adult)
+    person_from = models.ForeignKey(Person,
+                                    related_name="relationship_to_set")
+    person_to = models.ForeignKey(Person,
+                                  related_name="relationship_from_set")
     relationship = models.ForeignKey(RelationshipType)
     cc_on_email = models.BooleanField("CC on Emails", default=False)
+
+    class Meta:
+        unique_together = ['person_from', 'person_to']
 
 class FeePaid(models.Model):
     student = models.ForeignKey(Student)
@@ -222,6 +264,7 @@ class FeePaid(models.Model):
 
     class Meta:
         verbose_name_plural = "Fees paid"
+        unique_together = ['student', 'year']
 
 class Event(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -253,4 +296,5 @@ class WaitlistEntry(models.Model):
 
     class Meta:
         verbose_name_plural = "Waitlist entries"
+        unique_together = ['student', 'program']
 
