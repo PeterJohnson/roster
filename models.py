@@ -136,6 +136,12 @@ class Person(models.Model):
         else:
             return "%s, %s" % (self.lastname, self.firstname)
 
+    def render_normal(self):
+        if self.suffix:
+            return "%s %s %s" % (self.firstname, self.lastname, self.suffix)
+        else:
+            return "%s %s" % (self.firstname, self.lastname)
+
     class Meta:
         verbose_name_plural = "People"
         ordering = ['lastname', 'firstname']
@@ -256,29 +262,31 @@ class Relationship(models.Model):
     class Meta:
         unique_together = ['person_from', 'person_to']
 
-class FeePaid(models.Model):
-    student = models.ForeignKey(Student)
-    year = models.IntegerField()
-    amount = models.DecimalField(decimal_places=2, max_digits=5, null=True,
-                                 blank=True)
-
-    class Meta:
-        verbose_name_plural = "Fees paid"
-        unique_together = ['student', 'year']
-
 class Event(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-    location = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
+    location = models.CharField(max_length=50)
     date = models.DateField()
     time = models.TimeField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)
+    calendar_post = models.BooleanField(default=True)
+    fee = models.DecimalField(decimal_places=2, max_digits=5, default=0.0)
     people = models.ManyToManyField(Person, through='EventPerson',
                                     blank=True)
 
 class EventPerson(models.Model):
     event = models.ForeignKey(Event)
     person = models.ForeignKey(Person)
+    role = models.CharField("Role", max_length=20, choices=(
+        ('Participant', "Participant"),
+        ('Volunteer', "Volunteer"),
+    ))
+    fee_paid = models.DecimalField(decimal_places=2, max_digits=5,
+                                   default=0.0)
+    comments = models.TextField("Comments", blank=True)
+
+    class Meta:
+        unique_together = ['event', 'person']
 
 class TimeRecord(models.Model):
     person = models.ForeignKey(Person)

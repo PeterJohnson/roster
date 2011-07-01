@@ -141,10 +141,6 @@ class WaiverAdmin(admin.ModelAdmin):
     list_display = ['person', 'org', 'year']
     list_filter = ['org', 'year', 'person']
 
-class FeePaidAdmin(admin.ModelAdmin):
-    list_display = ['student', 'year']
-    list_filter = ['year', 'student']
-
 class TimeRecordAdmin(admin.ModelAdmin):
     list_display = ['person', 'event', 'clock_in', 'clock_out', 'hours',
                     'recorded']
@@ -179,7 +175,6 @@ admin.site.register(Waiver, WaiverAdmin)
 admin.site.register(Person, PersonAdmin)
 admin.site.register(Adult, AdultAdmin)
 admin.site.register(Student, StudentAdmin)
-admin.site.register(FeePaid, FeePaidAdmin)
 admin.site.register(TimeRecord, TimeRecordAdmin)
 admin.site.register(WaitlistEntry, WaitlistEntryAdmin)
 admin.site.register(Event, EventAdmin)
