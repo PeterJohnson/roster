@@ -1,0 +1,24 @@
+{% extends "roster/base.html" %}
+
+{% block content %}
+<form method="get" action=".">
+<table>
+    {{ form }}
+</table>
+<tr>
+    <td colspan="2"><input type="submit" value="Generate" /></td>
+</tr>
+</form>
+
+{% if results %}
+{# results.query }}<br />#}<br />
+<textarea readonly="true" cols="50" rows="20">
+{% for result in results %}{{ result.person.render_normal }} &lt;{{ result.email.email }}&gt;{{ separator }}
+{% endfor %}
+</textarea>
+<p>Click text box, type Ctrl-A, Ctrl-C to copy to clipboard.</p>
+{% else %}
+<p>No results.</p>
+{% endif %}
+
+{% endblock %}

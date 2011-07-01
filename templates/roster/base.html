@@ -1,0 +1,42 @@
+{% spaceless %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" {% block htmlclass %}{% endblock %}> 
+<head>{% block htmlhead %}
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+	{% block js %}
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
+	{% endblock js %}
+	{% block css %}<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/themes/smoothness/jquery-ui.css"/>
+	<link rel="stylesheet" type="text/css" href="/site_media/bookstore/style/site.css" />
+	{% endblock css %}
+    <link rel="shortcut icon" href="/favicon.png" type="image/png" /> 
+    <title>{% block title %}Team Roster{% endblock title %}</title> 
+{% endblock htmlhead %}</head>
+<body {% block bodyclass %}{% endblock %}>{% block body %}
+<div id="width">
+<div id="header" class="ui-corner-all">
+    {% block signin %}{% if not users.get_current_user %}
+        <div id="signin"><a href="{{loginurl}}" title="Sign in"><span class="ui-icon ui-icon-person"></span></a></div>
+    {% else %}
+        <div id="signin"><a href="{{logouturl}}" title="Sign out"><span class="ui-icon ui-icon-power"></span></a></div>
+    {% endif %}{% endblock signin %}
+</div>
+<div id="navbar">{% block navitems %}<a href="/roster/">Home</a>{% endblock navitems %}</div>
+
+<div id="ct">
+<div id="body">{% block content %}{% endblock %}</div>
+<div id="left">{% block leftbar %}{% endblock leftbar %}</div{#left#}>
+<div id="right"><div id="rightbar" class="ui-corner-all">
+{% block rightbar %}
+{% endblock rightbar %}
+</div{#rightbar#}></div{#right#}>
+</div{##ct#}>
+
+<div id="footer" class="ui-corner-all bshadow">{% block footer %}{% endblock footer %}</div{# id="footer"#}>
+
+{% endblock body %}
+{% block script %}{% endblock script %}
+</body>
+</html>
+{% endspaceless %}
