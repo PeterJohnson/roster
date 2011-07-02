@@ -8,6 +8,7 @@ from django.template import RequestContext
 from roster.models import *
 from roster.forms import *
 
+@login_required(login_url='/roster/login/')
 def front(request):
     return render_to_response("roster/front.html", locals(),
                               context_instance=RequestContext(request))
