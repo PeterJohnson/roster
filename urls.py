@@ -1,8 +1,11 @@
 from django.conf.urls.defaults import *
+from django.contrib.auth.views import login, logout
 
 urlpatterns = patterns('roster.views',
     (r'^$', 'front'),
     #(r'^readme$', 'readme'),    # use to preview readme.md
+    (r'^login/$', login, {'template_name': 'roster/login.html'}),
+    (r'^logout/$', logout, {'template_name': 'roster/logout.html'}),
     (r'^email/$', 'email_list'),
     #(r'^person/$', 'person_list'),
     #(r'^person/(?P<person_link>[\w-]+)$', 'person_detail'),

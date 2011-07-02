@@ -3,14 +3,16 @@ from django.http import HttpResponse
 from django.utils.html import escape, linebreaks
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.template import RequestContext
 
 from roster.models import *
 from roster.forms import *
 
 def front(request):
-    return render_to_response("roster/front.html", locals())
+    return render_to_response("roster/front.html", locals(),
+                              context_instance=RequestContext(request))
 
-@login_required
+@login_required(login_url='/roster/login/')
 def email_list(request):
     """Team email list."""
 
@@ -65,4 +67,6 @@ def email_list(request):
     else:
         form = EmailListForm()
 
-    return render_to_response("roster/email_list.html", locals())
+    return render_to_response("roster/email_list.html", locals(),
+                              context_instance=RequestContext(request))
+
