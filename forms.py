@@ -12,11 +12,13 @@ class HorizRadioRenderer(forms.RadioSelect.renderer):
             return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
 
 class EmailListForm(forms.Form):
-    who = forms.MultipleChoiceField(choices=(
-        ('Parent', "Parent"),
-        ('Volunteer', "Volunteer"),
-        ('Mentor', "Mentor"),
-        ('Student', "Student")),
+    who = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=(
+            ('Parent', "Parent"),
+            ('Volunteer', "Volunteer"),
+            ('Mentor', "Mentor"),
+            ('Student', "Student")),
         initial=['Parent', 'Volunteer', 'Mentor', 'Student'])
 
     active_fll = forms.BooleanField(label="Active FLL", required=False)
