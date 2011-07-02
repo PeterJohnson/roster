@@ -21,6 +21,7 @@ def email_list(request):
         form = EmailListForm(request.GET)
         if form.is_valid():
             results = PersonEmail.objects.none()
+            active = False
 
             # General team selections
             for formname, teamname in [('active_fll', 'FLL'),
@@ -31,6 +32,7 @@ def email_list(request):
                         primary=True,
                         person__member__teams__name__contains=teamname,
                         person__member__status='Active')
+                    active = True
 
             # FLL waitlist
             if 'fll_waitlist' in form.data:
@@ -38,6 +40,7 @@ def email_list(request):
                     primary=True,
                     person__in=WaitlistEntry.objects.filter(
                         program__name__contains='FLL').values('student'))
+                active = True
 
             # Filter down for various classes of people
             people = Member.objects.none()
@@ -54,7 +57,7 @@ def email_list(request):
 
             # CC parents on emails if enabled.  Only does one level
             # (so if a parent has a CC on email, it won't get followed).
-            if 'cc_on_email' in form.data:
+            if active and 'cc_on_email' in form.data:
                 results |= PersonEmail.objects.filter(
                     primary=True,
                     person__relationship_from_set__person_from__in=results.values('person'),
