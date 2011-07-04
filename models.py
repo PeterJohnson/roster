@@ -276,7 +276,7 @@ class Event(models.Model):
                                     blank=True)
 
     def __unicode__(self):
-        return "(%s) %s" % (self.date.strftime('%a %b %d, %Y'), self.name)
+        return "%s: %s" % (self.date.strftime('%a %b %d, %Y'), self.name)
 
     class Meta:
         ordering = ['date', 'time']
