@@ -277,6 +277,9 @@ class Event(models.Model):
     people = models.ManyToManyField(Person, through='EventPerson',
                                     blank=True)
 
+    class Meta:
+        ordering = ['date', 'time']
+
 class EventPerson(models.Model):
     event = models.ForeignKey(Event)
     person = models.ForeignKey(Person)
