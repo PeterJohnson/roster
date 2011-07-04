@@ -1,4 +1,5 @@
 from django.db import models, IntegrityError
+from django.contrib.localflavor.us.models import *
 
 # Base models
 class Organization(models.Model):
@@ -84,7 +85,7 @@ class Address(models.Model):
     line1 = models.CharField("Line 1", max_length=50)
     line2 = models.CharField("Line 2", max_length=50, blank=True)
     city = models.CharField("City", max_length=50)
-    state = models.CharField("State", max_length=2)
+    state = USStateField("State")
     zipcode = models.CharField("Zip Code", max_length=10, blank=True)
 
     def __unicode__(self):

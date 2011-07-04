@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.localflavor.us.forms import *
 from django import forms
 from roster.models import *
 
@@ -54,7 +55,16 @@ class AddressPersonInline(admin.TabularInline):
     verbose_name = 'Person'
     verbose_name_plural = 'People'
 
+class AddressAdminForm(forms.ModelForm):
+    class Meta:
+        model = Address
+
+    def __init__(self, *args, **kwargs):
+        super(AddressAdminForm, self).__init__(*args, **kwargs)
+        self.fields['zipcode'] = USZipCodeField()
+
 class AddressAdmin(admin.ModelAdmin):
+    form = AddressAdminForm
     list_display = ['line1', 'city', 'state', 'zipcode']
     list_filter = ['city', 'state', 'zipcode']
     #inlines = [AddressPersonInline]
