@@ -93,7 +93,7 @@ class Address(models.Model):
 
     class Meta:
         verbose_name_plural = "Addresses"
-        ordering = ['state', 'city', 'line1']
+        ordering = ['line1']
 
 class Phone(models.Model):
     phone = PhoneNumberField("Phone Number")
