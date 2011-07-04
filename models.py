@@ -98,7 +98,7 @@ class Phone(models.Model):
     phone = models.CharField("Phone Number", max_length=30, unique=True)
     location = models.CharField("Location", max_length=10, choices=(
         ('Home', "Home"),
-        ('Mobile', "Mobile"),
+        ('Mobile', "Cell"),
         ('Work', "Work"),
         ('Other', "Other"),
     ))
