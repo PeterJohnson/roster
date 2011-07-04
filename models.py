@@ -147,6 +147,9 @@ class Person(models.Model):
         ordering = ['lastname', 'firstname']
         unique_together = ['firstname', 'lastname', 'suffix']
 
+class Contact(Person):
+    pass
+
 class Member(Person):
     badge = models.IntegerField("Badge Number", unique=True, null=True,
                                 blank=True)

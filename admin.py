@@ -75,7 +75,7 @@ class RelationshipInline(admin.TabularInline):
     extra = 1
     verbose_name_plural = 'Relationships'
 
-class PersonAdmin(admin.ModelAdmin):
+class ContactAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'lastname', 'firstname']
     inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline,
                RelationshipInline]
@@ -172,7 +172,7 @@ admin.site.register(Address, AddressAdmin)
 admin.site.register(Phone, PhoneAdmin)
 admin.site.register(RelationshipType)
 admin.site.register(Waiver, WaiverAdmin)
-admin.site.register(Person, PersonAdmin)
+admin.site.register(Contact, ContactAdmin)
 admin.site.register(Adult, AdultAdmin)
 admin.site.register(Student, StudentAdmin)
 admin.site.register(TimeRecord, TimeRecordAdmin)
