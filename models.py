@@ -131,20 +131,16 @@ class Person(models.Model):
 
     def __unicode__(self):
         if self.suffix:
-            return "%s, %s (%s)" % (self.lastname, self.firstname,
-                                    self.suffix)
-        else:
-            return "%s, %s" % (self.lastname, self.firstname)
-
-    def render_normal(self):
-        if self.suffix:
             return "%s %s %s" % (self.firstname, self.lastname, self.suffix)
         else:
             return "%s %s" % (self.firstname, self.lastname)
 
+    def render_normal(self):
+        return self.__unicode__()
+
     class Meta:
         verbose_name_plural = "People"
-        ordering = ['lastname', 'firstname']
+        ordering = ['firstname', 'lastname']
         unique_together = ['firstname', 'lastname', 'suffix']
 
 class Contact(Person):
