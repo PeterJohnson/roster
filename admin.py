@@ -76,8 +76,14 @@ class PhonePersonInline(admin.TabularInline):
     verbose_name_plural = 'People'
 
 class PhoneAdmin(admin.ModelAdmin):
-    list_display = ['phone', 'location']
+    list_display = ['full_phone', 'location']
     #inlines = [PhonePersonInline]
+
+    def full_phone(self, obj):
+        if obj.ext:
+            return "%s x%s" % (obj.phone, obj.ext)
+        else:
+            return obj.phone
 
 class PersonEmailInline(admin.TabularInline):
     model = PersonEmail
