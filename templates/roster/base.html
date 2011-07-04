@@ -10,19 +10,19 @@
 	{% block css %}<link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/themes/smoothness/jquery-ui.css"/>
 	<link rel="stylesheet" type="text/css" href="/static/roster/style/site.css" />
 	{% endblock css %}
-    <link rel="shortcut icon" href="/favicon.png" type="image/png" /> 
+	<link rel="shortcut icon" href="/favicon.png" type="image/png" /> 
     <title>{% block title %}Team Roster{% endblock title %}</title> 
 {% endblock htmlhead %}</head>
 <body {% block bodyclass %}{% endblock %}>{% block body %}
 <div id="width">
 <div id="header" class="ui-corner-all">
     {% block signin %}{% if not user.is_authenticated %}
-        <div id="signin"><a href="/roster/login/">Sign in</a></div>
+        <div id="signin"><a href="{% url login %}">Sign in</a></div>
     {% else %}
-        <div id="signin"><a href="/roster/logout/">Sign out</a></div>
+        <div id="signin"><a href="{% url logout %}">Sign out</a></div>
     {% endif %}{% endblock signin %}
 </div>
-<div id="navbar">{% block navitems %}<a href="/roster/">Home</a>{% endblock navitems %}</div>
+<div id="navbar">{% block navitems %}<a href="{% url front %}">Home</a>{% endblock navitems %}</div>
 
 <div id="ct">
 <div id="body">{% block content %}{% endblock %}</div>

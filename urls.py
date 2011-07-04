@@ -2,11 +2,11 @@ from django.conf.urls.defaults import *
 from django.contrib.auth.views import login, logout
 
 urlpatterns = patterns('roster.views',
-    (r'^$', 'front'),
+    url(r'^$', 'front', name="front"),
     #(r'^readme$', 'readme'),    # use to preview readme.md
-    (r'^login/$', login, {'template_name': 'roster/login.html'}),
-    (r'^logout/$', logout, {'template_name': 'roster/logout.html'}),
-    (r'^email/$', 'email_list'),
+    url(r'^login/$', login, {'template_name': 'roster/login.html'}, "login"),
+    url(r'^logout/$', logout, {'template_name': 'roster/logout.html'}, "logout"),
+    url(r'^email/$', 'email_list', name="email_list"),
     #(r'^person/$', 'person_list'),
     #(r'^person/(?P<person_link>[\w-]+)$', 'person_detail'),
     #(r'^student/$', 'student_list'),
