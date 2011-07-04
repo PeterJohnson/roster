@@ -126,7 +126,23 @@ class ContactAdmin(admin.ModelAdmin):
     exclude = ['addresses', 'emails']
     radio_fields = {'gender': admin.HORIZONTAL}
 
+class AdultAdminForm(forms.ModelForm):
+    class Meta:
+        model = Adult
+
+    def __init__(self, *args, **kwargs):
+        super(AdultAdminForm, self).__init__(*args, **kwargs)
+        self.fields['medical'].widget = \
+                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
+        self.fields['medications'].widget = \
+                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
+        self.fields['prospective_source'].widget = \
+                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
+        self.fields['comments'].widget = \
+                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
+
 class AdultAdmin(admin.ModelAdmin):
+    form = AdultAdminForm
     list_display = ['__unicode__', 'lastname', 'firstname', 'role',
                     'mentor', 'company', 'status']
     list_filter = ['status', 'teams', 'role', 'mentor', 'company']
@@ -139,15 +155,11 @@ class AdultAdmin(admin.ModelAdmin):
         (None, {'fields': ['firstname', 'lastname', 'suffix', 'gender',
                            ('birth_month', 'birth_day', 'birth_year'),
                            'company', 'role', 'mentor',
-                           'status', 'teams',
-                           'badge', 'joined', 'left', 'receive_email',
-                           'contact_public']}),
-        ('Medical information', {'fields': ['medical', 'medications'],
-                                 'classes': ['collapse']}),
-        ('Misc information', {'fields': ['shirt_size',
-                                         'prospective_source',
-                                         'comments'],
-                              'classes': ['collapse']}),
+                           'status', 'shirt_size',
+                           'joined', 'badge', 'teams', 'left',
+                           'receive_email', 'contact_public']}),
+        ('Medical information', {'fields': ['medical', 'medications']}),
+        ('Misc information', {'fields': ['prospective_source', 'comments']}),
     ]
 
 class StudentAdminForm(forms.ModelForm):
@@ -160,6 +172,14 @@ class StudentAdminForm(forms.ModelForm):
         self.fields['birth_month'].required = True
         self.fields['birth_day'].required = True
         self.fields['school'].choices = schools_as_choices()
+        self.fields['medical'].widget = \
+                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
+        self.fields['medications'].widget = \
+                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
+        self.fields['prospective_source'].widget = \
+                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
+        self.fields['comments'].widget = \
+                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
 
 class StudentAdmin(admin.ModelAdmin):
     form = StudentAdminForm
@@ -174,14 +194,12 @@ class StudentAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {'fields': ['firstname', 'lastname', 'suffix', 'gender',
                            ('birth_month', 'birth_day', 'birth_year'),
-                           ('school', 'grad_year'), 'status',
+                           ('school', 'grad_year'),
+                           'status', 'shirt_size',
                            'joined', 'badge', 'teams', 'left',
                            'receive_email', 'contact_public']}),
-        ('Medical information', {'fields': ['medical', 'medications'],
-                                 'classes': ['collapse']}),
-        ('Misc information', {'fields': ['shirt_size', 'prospective_source',
-                                         'comments'],
-                              'classes': ['collapse']}),
+        ('Medical information', {'fields': ['medical', 'medications']}),
+        ('Misc information', {'fields': ['prospective_source', 'comments']}),
     ]
 
 class WaiverAdmin(admin.ModelAdmin):
