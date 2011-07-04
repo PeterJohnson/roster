@@ -107,7 +107,7 @@ class Phone(models.Model):
 
     def __unicode__(self):
         if self.ext:
-            return "%s x%s (%s)" % (self.phone, self.extension,
+            return "%s x%s (%s)" % (self.phone, self.ext,
                                     self.get_location_display())
         else:
             return "%s (%s)" % (self.phone, self.get_location_display())
