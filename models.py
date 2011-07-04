@@ -144,7 +144,9 @@ class Person(models.Model):
         unique_together = ['firstname', 'lastname', 'suffix']
 
 class Contact(Person):
-    pass
+    class Meta:
+        verbose_name = "emergency contact"
+        verbose_name_plural = "emergency contacts"
 
 class Member(Person):
     badge = models.IntegerField("Badge Number", unique=True, null=True,
