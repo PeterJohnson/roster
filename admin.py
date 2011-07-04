@@ -13,14 +13,14 @@ def schools_as_choices():
 
     return schools
 
-def people_as_choices():
-    people = []
-    for model in [Student, Adult, Contact]:
-        people.append([model._meta.verbose_name_plural.capitalize(), []])
-        for person in model.objects.all():
-            people[-1][1].append((person.id, unicode(person)))
-
-    return people
+#def people_as_choices():
+#    people = []
+#    for model in [Student, Adult, Contact]:
+#        people.append([model._meta.verbose_name_plural.capitalize(), []])
+#        for person in model.objects.all():
+#            people[-1][1].append((person.id, unicode(person)))
+#
+#    return people
 
 class TeamAdmin(admin.ModelAdmin):
     list_display = ['name', 'program']
@@ -110,7 +110,7 @@ class RelationshipAdminForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(RelationshipAdminForm, self).__init__(*args, **kwargs)
-        self.fields['person_to'].choices = people_as_choices()
+        #self.fields['person_to'].choices = people_as_choices()
 
 class RelationshipInline(admin.TabularInline):
     model = Relationship
@@ -203,7 +203,7 @@ class EventPersonInlineForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(EventPersonInlineForm, self).__init__(*args, **kwargs)
-        self.fields['person'].choices = people_as_choices()
+        #self.fields['person'].choices = people_as_choices()
 
 class EventPersonInline(admin.TabularInline):
     form = EventPersonInlineForm
