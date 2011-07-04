@@ -106,9 +106,8 @@ class RelationshipInline(admin.TabularInline):
 class ContactAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'lastname', 'firstname']
     search_fields = ['^firstname', '^lastname']
-    inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline,
-               RelationshipInline]
-    exclude = ['addresses']
+    inlines = [PersonPhoneInline, RelationshipInline]
+    exclude = ['addresses', 'emails']
     radio_fields = {'gender': admin.HORIZONTAL}
 
 class AdultAdmin(admin.ModelAdmin):
@@ -116,7 +115,7 @@ class AdultAdmin(admin.ModelAdmin):
                     'mentor', 'company', 'status']
     list_filter = ['status', 'teams', 'role', 'mentor', 'company']
     search_fields = ['^firstname', '^lastname']
-    inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline,
+    inlines = [PersonEmailInline, PersonPhoneInline, PersonAddressInline,
                RelationshipInline]
     exclude = ['addresses']
     radio_fields = {'gender': admin.HORIZONTAL}
@@ -152,7 +151,7 @@ class StudentAdmin(admin.ModelAdmin):
                     'grad_year', 'status']
     list_filter = ['status', 'teams', 'school', 'grad_year']
     search_fields = ['^firstname', '^lastname']
-    inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline,
+    inlines = [PersonEmailInline, PersonPhoneInline, PersonAddressInline,
                RelationshipInline]
     exclude = ['addresses']
     radio_fields = {'gender': admin.HORIZONTAL}
