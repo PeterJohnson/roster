@@ -105,6 +105,7 @@ class RelationshipInline(admin.TabularInline):
 
 class ContactAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'lastname', 'firstname']
+    search_fields = ['^firstname', '^lastname']
     inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline,
                RelationshipInline]
     exclude = ['addresses']
@@ -114,6 +115,7 @@ class AdultAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'lastname', 'firstname', 'role',
                     'mentor', 'company', 'status']
     list_filter = ['status', 'teams', 'role', 'mentor', 'company']
+    search_fields = ['^firstname', '^lastname']
     inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline,
                RelationshipInline]
     exclude = ['addresses']
@@ -149,6 +151,7 @@ class StudentAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'lastname', 'firstname', 'school',
                     'grad_year', 'status']
     list_filter = ['status', 'teams', 'school', 'grad_year']
+    search_fields = ['^firstname', '^lastname']
     inlines = [PersonAddressInline, PersonPhoneInline, PersonEmailInline,
                RelationshipInline]
     exclude = ['addresses']
