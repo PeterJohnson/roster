@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.localflavor.us.forms import *
 from django import forms
 from roster.models import *
+from roster.fields import *
 
 def schools_as_choices():
     schools = []
@@ -140,6 +141,10 @@ class AdultAdminForm(forms.ModelForm):
                 forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
         self.fields['comments'].widget = \
                 forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
+        self.fields['joined'] = \
+                USDateFormField(widget=admin.widgets.AdminDateWidget)
+        self.fields['left'] = \
+                USDateFormField(widget=admin.widgets.AdminDateWidget)
 
 class AdultAdmin(admin.ModelAdmin):
     form = AdultAdminForm
@@ -180,6 +185,10 @@ class StudentAdminForm(forms.ModelForm):
                 forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
         self.fields['comments'].widget = \
                 forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
+        self.fields['joined'] = \
+                USDateFormField(widget=admin.widgets.AdminDateWidget)
+        self.fields['left'] = \
+                USDateFormField(widget=admin.widgets.AdminDateWidget)
 
 class StudentAdmin(admin.ModelAdmin):
     form = StudentAdminForm
@@ -230,7 +239,19 @@ class EventPersonInline(admin.TabularInline):
     verbose_name = 'Person'
     verbose_name_plural = 'People'
 
+class EventAdminForm(forms.ModelForm):
+    class Meta:
+        model = Event
+
+    def __init__(self, *args, **kwargs):
+        super(EventAdminForm, self).__init__(*args, **kwargs)
+        self.fields['date'] = \
+                USDateFormField(widget=admin.widgets.AdminDateWidget)
+        self.fields['end_date'] = \
+                USDateFormField(widget=admin.widgets.AdminDateWidget)
+
 class EventAdmin(admin.ModelAdmin):
+    form = EventAdminForm
     list_display = ['name', 'location', 'date', 'time', 'end_date',
                     'end_time']
     list_filter = ['location', 'date']
