@@ -210,6 +210,7 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ['name', 'location', 'date', 'time', 'end_date',
                     'end_time']
     list_filter = ['location', 'date']
+    search_fields = ['name']
     inlines = [EventPersonInline]
 
 admin.site.register(Organization)
