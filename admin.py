@@ -157,7 +157,8 @@ class EventPersonInline(admin.TabularInline):
     verbose_name_plural = 'People'
 
 class EventAdmin(admin.ModelAdmin):
-    list_display = ['name', 'location', 'date', 'time']
+    list_display = ['name', 'location', 'date', 'time', 'end_date',
+                    'end_time']
     list_filter = ['location', 'date']
     inlines = [EventPersonInline]
 
