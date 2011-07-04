@@ -31,14 +31,17 @@ class EmailListForm(forms.Form):
         widget=forms.RadioSelect(renderer=HorizRadioRenderer),
         choices=((',',","),(';',";")), initial=',')
 
-class EventEmailForm(forms.Form):
-    who = forms.MultipleChoiceField(choices=(
-        ('Volunteer', "Volunteer"),
-        ('Participant', "Participant")),
+class EventEmailListForm(forms.Form):
+    who = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=(
+            ('Volunteer', "Volunteer"),
+            ('Participant', "Participant")),
         initial=['Volunteer', 'Participant'])
     event = forms.ModelChoiceField(
-        queryset=Event.objects.filter(calendar_post=True), required=False,
-        help_text="Overrides above")
+        queryset=Event.objects.filter(calendar_post=True))
+    cc_on_email = forms.BooleanField(label="Include Parent CC",
+                                     required=False, initial=True)
     separator = forms.ChoiceField(
         widget=forms.RadioSelect(renderer=HorizRadioRenderer),
         choices=((',',","),(';',";")), initial=',')
