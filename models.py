@@ -266,6 +266,7 @@ class Relationship(models.Model):
                                   related_name="relationship_from_set")
     relationship = models.ForeignKey(RelationshipType)
     cc_on_email = models.BooleanField("CC on Emails", default=False)
+    emergency_contact = models.BooleanField("Emergency Contact", default=False)
 
     class Meta:
         unique_together = ['person_from', 'person_to']
