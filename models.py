@@ -96,7 +96,8 @@ class Address(models.Model):
         ordering = ['state', 'city', 'line1']
 
 class Phone(models.Model):
-    phone = models.CharField("Phone Number", max_length=30, unique=True)
+    phone = PhoneNumberField("Phone Number")
+    ext = models.CharField("Extension", max_length=5, blank=True)
     location = models.CharField("Type", max_length=10, choices=(
         ('Home', "Home"),
         ('Mobile', "Cell"),
@@ -105,10 +106,15 @@ class Phone(models.Model):
     ))
 
     def __unicode__(self):
-        return "%s (%s)" % (self.phone, self.get_location_display())
+        if self.ext:
+            return "%s x%s (%s)" % (self.phone, self.extension,
+                                    self.get_location_display())
+        else:
+            return "%s (%s)" % (self.phone, self.get_location_display())
 
     class Meta:
         ordering = ['phone']
+        unique_together = ['phone', 'ext']
 
 class RelationshipType(models.Model):
     type = models.CharField(max_length=30, unique=True)
