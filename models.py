@@ -273,6 +273,9 @@ class Event(models.Model):
     people = models.ManyToManyField(Person, through='EventPerson',
                                     blank=True)
 
+    def __unicode__(self):
+        return "(%s) %s" % (self.date.strftime('%a %b %d, %Y'), self.name)
+
     class Meta:
         ordering = ['date', 'time']
 
