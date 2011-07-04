@@ -53,7 +53,7 @@ class School(models.Model):
         return "%s" % self.longname
 
     class Meta:
-        ordering = ['type', 'longname']
+        ordering = ['longname']
 
 class Company(models.Model):
     name = models.CharField("Name", max_length=20, unique=True)
