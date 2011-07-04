@@ -179,7 +179,16 @@ class WaitlistEntryAdmin(admin.ModelAdmin):
     list_display = ['student', 'program', 'team', 'date']
     list_filter = ['program', 'team']
 
+class EventPersonInlineForm(forms.ModelForm):
+    class Meta:
+        model = EventPerson
+
+    def __init__(self, *args, **kwargs):
+        super(EventPersonInlineForm, self).__init__(*args, **kwargs)
+        self.fields['person'].choices = people_as_choices()
+
 class EventPersonInline(admin.TabularInline):
+    form = EventPersonInlineForm
     model = EventPerson
     extra = 1
     verbose_name = 'Person'
