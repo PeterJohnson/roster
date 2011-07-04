@@ -2,6 +2,25 @@ from django.contrib import admin
 from django import forms
 from roster.models import *
 
+def schools_as_choices():
+    schools = []
+    for school in School.objects.order_by('type', 'longname'):
+        stype = school.get_type_display()+"s"
+        if not schools or schools[-1][0] != stype:
+            schools.append([stype, []])
+        schools[-1][1].append((school.id, school.longname))
+
+    return schools
+
+def people_as_choices():
+    people = []
+    for model in [Student, Adult, Contact]:
+        people.append([model._meta.verbose_name_plural.capitalize(), []])
+        for person in model.objects.all():
+            people[-1][1].append((person.id, unicode(person)))
+
+    return people
+
 class TeamAdmin(admin.ModelAdmin):
     list_display = ['name', 'program']
 
@@ -69,8 +88,17 @@ class PersonPhoneInline(admin.TabularInline):
     verbose_name = 'Phone number'
     verbose_name_plural = 'Phone numbers'
 
+class RelationshipAdminForm(forms.ModelForm):
+    class Meta:
+        model = Relationship
+
+    def __init__(self, *args, **kwargs):
+        super(RelationshipAdminForm, self).__init__(*args, **kwargs)
+        self.fields['person_to'].choices = people_as_choices()
+
 class RelationshipInline(admin.TabularInline):
     model = Relationship
+    form = RelationshipAdminForm
     fk_name = 'person_from'
     extra = 1
     verbose_name_plural = 'Relationships'
@@ -114,6 +142,7 @@ class StudentAdminForm(forms.ModelForm):
         self.fields['birth_year'].required = True
         self.fields['birth_month'].required = True
         self.fields['birth_day'].required = True
+        self.fields['school'].choices = schools_as_choices()
 
 class StudentAdmin(admin.ModelAdmin):
     form = StudentAdminForm
