@@ -143,8 +143,10 @@ class AdultAdminForm(forms.ModelForm):
                 forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
         self.fields['joined'] = \
                 USDateFormField(widget=admin.widgets.AdminDateWidget)
+        self.fields['joined'].required = False
         self.fields['left'] = \
                 USDateFormField(widget=admin.widgets.AdminDateWidget)
+        self.fields['left'].required = False
 
 class AdultAdmin(admin.ModelAdmin):
     form = AdultAdminForm
@@ -187,8 +189,10 @@ class StudentAdminForm(forms.ModelForm):
                 forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
         self.fields['joined'] = \
                 USDateFormField(widget=admin.widgets.AdminDateWidget)
+        self.fields['joined'].required = False
         self.fields['left'] = \
                 USDateFormField(widget=admin.widgets.AdminDateWidget)
+        self.fields['left'].required = False
 
 class StudentAdmin(admin.ModelAdmin):
     form = StudentAdminForm
@@ -249,6 +253,7 @@ class EventAdminForm(forms.ModelForm):
                 USDateFormField(widget=admin.widgets.AdminDateWidget)
         self.fields['end_date'] = \
                 USDateFormField(widget=admin.widgets.AdminDateWidget)
+        self.fields['end_date'].required = False
 
 class EventAdmin(admin.ModelAdmin):
     form = EventAdminForm
