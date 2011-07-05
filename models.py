@@ -57,8 +57,7 @@ class School(models.Model):
         ordering = ['longname']
 
 class Company(models.Model):
-    name = models.CharField("Name", max_length=20, unique=True)
-    longname = models.CharField("Long name", max_length=50)
+    name = models.CharField("Name", max_length=50, unique=True)
 
     def __unicode__(self):
         return self.name
