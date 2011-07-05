@@ -121,8 +121,8 @@ class RelationshipInline(admin.TabularInline):
     verbose_name_plural = 'Relationships'
 
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', 'lastname', 'firstname']
-    search_fields = ['^firstname', '^lastname']
+    list_display = ['__unicode__', 'lastname', 'get_firstname']
+    search_fields = ['^firstname', '^lastname', '^nickname']
     inlines = [PersonPhoneInline, RelationshipInline]
     exclude = ['addresses', 'emails']
     radio_fields = {'gender': admin.HORIZONTAL}
@@ -150,16 +150,17 @@ class AdultAdminForm(forms.ModelForm):
 
 class AdultAdmin(admin.ModelAdmin):
     form = AdultAdminForm
-    list_display = ['__unicode__', 'lastname', 'firstname', 'role',
+    list_display = ['__unicode__', 'lastname', 'get_firstname', 'role',
                     'mentor', 'company', 'status']
     list_filter = ['status', 'teams', 'role', 'mentor', 'company']
-    search_fields = ['^firstname', '^lastname']
+    search_fields = ['^firstname', '^lastname', '^nickname']
     inlines = [PersonEmailInline, PersonPhoneInline, PersonAddressInline,
                RelationshipInline]
     exclude = ['addresses']
     radio_fields = {'gender': admin.HORIZONTAL}
     fieldsets = [
-        (None, {'fields': ['firstname', 'lastname', 'suffix', 'gender',
+        (None, {'fields': ['firstname', 'lastname', 'suffix', 'nickname',
+                           'gender',
                            ('birth_month', 'birth_day', 'birth_year'),
                            'company', 'role', 'mentor',
                            'status', 'shirt_size',
@@ -196,16 +197,17 @@ class StudentAdminForm(forms.ModelForm):
 
 class StudentAdmin(admin.ModelAdmin):
     form = StudentAdminForm
-    list_display = ['__unicode__', 'lastname', 'firstname', 'school',
+    list_display = ['__unicode__', 'lastname', 'get_firstname', 'school',
                     'grad_year', 'status']
     list_filter = ['status', 'teams', 'school', 'grad_year']
-    search_fields = ['^firstname', '^lastname']
+    search_fields = ['^firstname', '^lastname', '^nickname']
     inlines = [PersonEmailInline, PersonPhoneInline, PersonAddressInline,
                RelationshipInline]
     exclude = ['addresses']
     radio_fields = {'gender': admin.HORIZONTAL}
     fieldsets = [
-        (None, {'fields': ['firstname', 'lastname', 'suffix', 'gender',
+        (None, {'fields': ['firstname', 'lastname', 'suffix', 'nickname',
+                           'gender',
                            ('birth_month', 'birth_day', 'birth_year'),
                            ('school', 'grad_year'),
                            'status', 'shirt_size',

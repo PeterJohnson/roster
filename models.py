@@ -125,6 +125,7 @@ class Person(models.Model):
     firstname = models.CharField("First Name", max_length=100)
     lastname = models.CharField("Last Name", max_length=100)
     suffix = models.CharField("Suffix", max_length=10, blank=True)
+    nickname = models.CharField("Nickname", max_length=50, blank=True)
 
     gender = models.CharField("Gender", max_length=1, choices=(
         ('M', "Male"),
@@ -137,12 +138,20 @@ class Person(models.Model):
 
     def __unicode__(self):
         if self.suffix:
-            return "%s %s %s" % (self.firstname, self.lastname, self.suffix)
+            return "%s %s %s" % (self.get_firstname(), self.lastname,
+                                 self.suffix)
         else:
-            return "%s %s" % (self.firstname, self.lastname)
+            return "%s %s" % (self.get_firstname(), self.lastname)
 
     def render_normal(self):
         return self.__unicode__()
+
+    def get_firstname(self):
+        if self.nickname:
+            return self.nickname
+        else:
+            return self.firstname
+    get_firstname.short_description = 'First Name'
 
     class Meta:
         verbose_name_plural = "People"
