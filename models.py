@@ -208,12 +208,12 @@ class Member(Person):
 class PersonEmail(models.Model):
     person = models.ForeignKey(Person)
     email = models.ForeignKey(Email)
-    primary = models.BooleanField("Primary")
+    primary = models.BooleanField("Primary", default=True)
 
 class PersonPhone(models.Model):
     person = models.ForeignKey(Person)
     phone = models.ForeignKey(Phone)
-    primary = models.BooleanField("Primary")
+    primary = models.BooleanField("Primary", default=True)
 
 class Waiver(models.Model):
     person = models.ForeignKey(Person)
