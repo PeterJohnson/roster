@@ -1,0 +1,36 @@
+{% extends "roster/base.html" %}
+
+{% block content %}
+<form method="get" action=".">
+<table id="phone_list">
+    {{ form }}
+</table>
+<tr>
+    <td colspan="2"><input type="submit" value="Generate" /></td>
+</tr>
+</form>
+
+{# results.query }}<br /><br />#}
+{% if final_results %}
+<br/>
+<table border="1">
+    <tr>
+	<td>Name</td>
+	<td>Role</td>
+	<td>Cell</td>
+	<td>Home</td>
+    </tr>
+    {% for result in final_results %}
+    <tr>
+	<td>{{ result.name }}</td>
+	<td>{{ result.role }}</td>
+	<td>{{ result.cell }}</td>
+	<td>{{ result.home }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No results.</p>
+{% endif %}
+
+{% endblock %}

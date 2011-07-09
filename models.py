@@ -1,5 +1,6 @@
 from django.db import models, IntegrityError
 from django.contrib.localflavor.us.models import *
+from batch_select.models import BatchManager
 
 # Base models
 class Organization(models.Model):
@@ -111,6 +112,12 @@ class Phone(models.Model):
         else:
             return "%s (%s)" % (self.phone, self.get_location_display())
 
+    def render_normal(self):
+        if self.ext:
+            return "%s x%s" % (self.phone, self.ext)
+        else:
+            return self.phone
+
     class Meta:
         ordering = ['phone']
         unique_together = ['phone', 'ext']
@@ -152,6 +159,8 @@ class Person(models.Model):
         else:
             return self.firstname
     get_firstname.short_description = 'First Name'
+
+    objects = BatchManager()
 
     class Meta:
         verbose_name_plural = "People"

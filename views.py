@@ -43,14 +43,15 @@ def email_list(request):
                 active = True
 
             # Filter down for various classes of people
+            who = form.data.getlist('who')
             people = Member.objects.none()
-            if 'Parent' in form.data['who']:
+            if 'Parent' in who:
                 people |= Member.objects.filter(adult__role='Parent')
-            if 'Volunteer' in form.data['who']:
+            if 'Volunteer' in who:
                 people |= Member.objects.filter(adult__role='Volunteer')
-            if 'Mentor' in form.data['who']:
+            if 'Mentor' in who:
                 people |= Member.objects.filter(adult__mentor=True)
-            if 'Student' in form.data['who']:
+            if 'Student' in who:
                 people |= Member.objects.exclude(student=None)
 
             results = results.filter(person__in=people)
@@ -72,6 +73,80 @@ def email_list(request):
         form = EmailListForm()
 
     return render_to_response("roster/email_list.html", locals(),
+                              context_instance=RequestContext(request))
+
+@login_required(login_url='/roster/login/')
+def phone_list(request):
+    """Team phone list."""
+
+    if request.method == 'GET' and request.GET:
+        form = PhoneListForm(request.GET)
+        if form.is_valid():
+            results = Person.objects.batch_select('phones').none()
+
+            # General team selections
+            for formname, teamname in [('active_fll', 'FLL'),
+                                       ('active_ftc', 'FTC'),
+                                       ('active_frc', 'FRC')]:
+                if formname in form.data:
+                    results |= Person.objects.batch_select('phones').filter(
+                        member__teams__name__contains=teamname,
+                        member__status='Active')
+
+            # FLL waitlist
+            if 'fll_waitlist' in form.data:
+                results |= Person.objects.batch_select('phones').filter(
+                    id__in=WaitlistEntry.objects.filter(
+                        program__name__contains='FLL').values('student'))
+
+            # Filter down for various classes of people
+            who = form.data.getlist('who')
+            parents = set()
+            volunteers = set()
+            mentors = set()
+            students = set()
+            if 'Parent' in who:
+                parents = set(Adult.objects.filter(role='Parent').values_list('id', flat=True))
+            if 'Volunteer' in who:
+                volunteers = set(Adult.objects.filter(role='Volunteer').values_list('id', flat=True))
+            if 'Mentor' in who:
+                mentors = set(Adult.objects.filter(mentor=True).values_list('id', flat=True))
+            if 'Student' in who:
+                students = set(Student.objects.all().values_list('id', flat=True))
+            people = parents|volunteers|mentors|students
+
+            results = results.filter(id__in=people)
+
+            # Uniquify and get related info to avoid additional queries
+            results = results.distinct()
+
+            final_results = []
+            for result in results:
+                name = result.render_normal()
+                if result.id in parents:
+                    role = "Parent"
+                elif result.id in mentors:
+                    role = "Mentor"
+                elif result.id in volunteers:
+                    role = "Volunteer"
+                elif result.id in students:
+                    role = "Student"
+                else:
+                    role = ""
+                cell = ""
+                home = ""
+                for phone in result.phones_all:
+                    if phone.location == 'Mobile':
+                        cell = phone.render_normal()
+                    elif phone.location == 'Home':
+                        home = phone.render_normal()
+                final_results.append(dict(name=name, role=role, cell=cell,
+                                          home=home))
+
+    else:
+        form = PhoneListForm()
+
+    return render_to_response("roster/phone_list.html", locals(),
                               context_instance=RequestContext(request))
 
 @login_required(login_url='/roster/login/')

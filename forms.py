@@ -31,6 +31,21 @@ class EmailListForm(forms.Form):
         widget=forms.RadioSelect(renderer=HorizRadioRenderer),
         choices=((',',","),(';',";")), initial=',')
 
+class PhoneListForm(forms.Form):
+    who = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=(
+            ('Parent', "Parent"),
+            ('Volunteer', "Volunteer"),
+            ('Mentor', "Mentor"),
+            ('Student', "Student")),
+        initial=['Parent', 'Volunteer', 'Mentor', 'Student'])
+
+    active_fll = forms.BooleanField(label="Active FLL", required=False)
+    active_ftc = forms.BooleanField(label="Active FTC", required=False)
+    active_frc = forms.BooleanField(label="Active FRC", required=False)
+    fll_waitlist = forms.BooleanField(label="FLL Waitlist", required=False)
+
 class EventEmailListForm(forms.Form):
     who = forms.MultipleChoiceField(
         widget=forms.CheckboxSelectMultiple,
