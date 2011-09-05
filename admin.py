@@ -33,8 +33,8 @@ class PersonInline(admin.TabularInline):
 class PositionAdmin(admin.ModelAdmin):
     list_display = ['title', 'steering']
     list_filter = ['steering']
-    inlines = [PersonInline]
-    #fieldsets = [(None, {'fields': ['title', 'steering', 'people']})]
+    #inlines = [MemberInline]
+    #fieldsets = [(None, {'fields': ['title', 'steering', 'members']})]
 
 class SchoolAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'name', 'type']
