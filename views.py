@@ -123,10 +123,10 @@ def phone_list(request):
             final_results = []
             for result in results:
                 name = result.render_normal()
-                if result.id in parents:
-                    role = "Parent"
-                elif result.id in mentors:
+                if result.id in mentors:
                     role = "Mentor"
+                elif result.id in parents:
+                    role = "Parent"
                 elif result.id in volunteers:
                     role = "Volunteer"
                 elif result.id in students:
@@ -180,5 +180,48 @@ def event_email_list(request):
         form = EventEmailListForm()
 
     return render_to_response("roster/email_list.html", locals(),
+                              context_instance=RequestContext(request))
+
+@login_required(login_url='/roster/login/')
+def team_membership(request):
+    """List members based on team membership."""
+
+    if request.method == 'GET' and request.GET:
+        form = TeamMembershipForm(request.GET)
+        if form.is_valid():
+            if form.data['team']:
+                results = Member.objects.filter(teams=form.data['team'])
+            else:
+                results = Member.objects.filter(teams=None)
+            results = results.exclude(status='Alumnus')
+
+            # Get various classes of people
+            parents = set(Adult.objects.filter(role='Parent').values_list('id', flat=True))
+            volunteers = set(Adult.objects.filter(role='Volunteer').values_list('id', flat=True))
+            mentors = set(Adult.objects.filter(mentor=True).values_list('id', flat=True))
+            students = set(Student.objects.all().values_list('id', flat=True))
+
+            final_results = []
+            for result in results:
+                name = result.render_normal()
+                if result.id in mentors:
+                    role = "Mentor"
+                elif result.id in parents:
+                    role = "Parent"
+                elif result.id in volunteers:
+                    role = "Volunteer"
+                elif result.id in students:
+                    role = "Student"
+                else:
+                    role = ""
+                final_results.append(dict(id=result.id, name=name,
+                                          role=role))
+
+    else:
+        form = TeamMembershipForm()
+
+
+    return render_to_response("roster/team_membership.html",
+                              locals(),
                               context_instance=RequestContext(request))
 

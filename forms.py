@@ -61,3 +61,7 @@ class EventEmailListForm(forms.Form):
         widget=forms.RadioSelect(renderer=HorizRadioRenderer),
         choices=((',',","),(';',";")), initial=',')
 
+class TeamMembershipForm(forms.Form):
+    team = forms.ModelChoiceField(
+        queryset=Team.objects.all(), required=False)
+
