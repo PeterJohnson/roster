@@ -15,16 +15,22 @@ class EmailListForm(forms.Form):
     who = forms.MultipleChoiceField(
         widget=forms.CheckboxSelectMultiple,
         choices=(
-            ('Parent', "Parent"),
-            ('Volunteer', "Volunteer"),
+            ('Parent', "Parent (Mother/Father)"),
             ('Mentor', "Mentor"),
-            ('Student', "Student")),
-        initial=['Parent', 'Volunteer', 'Mentor', 'Student'])
+            ('Student', "Student"),
+            ('Fan', "Fan"),
+        ),
+        initial=['Parent', 'Mentor', 'Student'])
 
-    active_fll = forms.BooleanField(label="Active FLL", required=False)
-    active_ftc = forms.BooleanField(label="Active FTC", required=False)
-    active_frc = forms.BooleanField(label="Active FRC", required=False)
-    fll_waitlist = forms.BooleanField(label="FLL Waitlist", required=False)
+    status = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=PersonTeam.STATUS_CHOICES,
+        initial=['Active'])
+
+    team = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=[(x.id, x.name) for x in Team.objects.all()])
+
     cc_on_email = forms.BooleanField(label="Include Parent CC",
                                      required=False, initial=True)
     separator = forms.ChoiceField(
@@ -35,16 +41,21 @@ class PhoneListForm(forms.Form):
     who = forms.MultipleChoiceField(
         widget=forms.CheckboxSelectMultiple,
         choices=(
-            ('Parent', "Parent"),
-            ('Volunteer', "Volunteer"),
+            ('Parent', "Parent (Mother/Father)"),
             ('Mentor', "Mentor"),
-            ('Student', "Student")),
-        initial=['Parent', 'Volunteer', 'Mentor', 'Student'])
+            ('Student', "Student"),
+            ('Fan', "Fan"),
+        ),
+        initial=['Parent', 'Mentor', 'Student'])
 
-    active_fll = forms.BooleanField(label="Active FLL", required=False)
-    active_ftc = forms.BooleanField(label="Active FTC", required=False)
-    active_frc = forms.BooleanField(label="Active FRC", required=False)
-    fll_waitlist = forms.BooleanField(label="FLL Waitlist", required=False)
+    status = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=PersonTeam.STATUS_CHOICES,
+        initial=['Active'])
+
+    team = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=[(x.id, x.name) for x in Team.objects.all()])
 
 class EventEmailListForm(forms.Form):
     who = forms.MultipleChoiceField(

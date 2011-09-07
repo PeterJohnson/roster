@@ -3,9 +3,10 @@ from django.contrib.localflavor.us.forms import *
 from django import forms
 from roster.models import *
 from roster.fields import *
+from roster.filters import *
 
 def schools_as_choices():
-    schools = []
+    schools = [('', "---------")]
     for school in School.objects.order_by('type', 'longname'):
         stype = school.get_type_display()+"s"
         if not schools or schools[-1][0] != stype:
@@ -86,6 +87,26 @@ class PhoneAdmin(admin.ModelAdmin):
         else:
             return obj.phone
 
+class PersonTeamInlineForm(forms.ModelForm):
+    class Meta:
+        model = PersonTeam
+
+    def __init__(self, *args, **kwargs):
+        super(PersonTeamInlineForm, self).__init__(*args, **kwargs)
+        self.fields['joined'] = \
+                USDateFormField(widget=admin.widgets.AdminDateWidget)
+        self.fields['joined'].required = False
+        self.fields['left'] = \
+                USDateFormField(widget=admin.widgets.AdminDateWidget)
+        self.fields['left'].required = False
+
+class PersonTeamInline(admin.TabularInline):
+    model = PersonTeam
+    form = PersonTeamInlineForm
+    extra = 1
+    verbose_name = 'Team'
+    verbose_name_plural = 'Teams'
+
 class PersonEmailInline(admin.TabularInline):
     model = PersonEmail
     extra = 1
@@ -120,65 +141,12 @@ class RelationshipInline(admin.TabularInline):
     extra = 1
     verbose_name_plural = 'Relationships'
 
-class ContactAdmin(admin.ModelAdmin):
-    list_display = ['__unicode__', 'lastname', 'get_firstname']
-    search_fields = ['^firstname', '^lastname', '^nickname']
-    inlines = [PersonPhoneInline, RelationshipInline]
-    exclude = ['addresses', 'emails']
-    radio_fields = {'gender': admin.HORIZONTAL}
-
-class AdultAdminForm(forms.ModelForm):
+class PersonAdminForm(forms.ModelForm):
     class Meta:
-        model = Adult
+        model = Person
 
     def __init__(self, *args, **kwargs):
-        super(AdultAdminForm, self).__init__(*args, **kwargs)
-        self.fields['medical'].widget = \
-                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
-        self.fields['medications'].widget = \
-                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
-        self.fields['prospective_source'].widget = \
-                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
-        self.fields['comments'].widget = \
-                forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
-        self.fields['joined'] = \
-                USDateFormField(widget=admin.widgets.AdminDateWidget)
-        self.fields['joined'].required = False
-        self.fields['left'] = \
-                USDateFormField(widget=admin.widgets.AdminDateWidget)
-        self.fields['left'].required = False
-
-class AdultAdmin(admin.ModelAdmin):
-    form = AdultAdminForm
-    list_display = ['__unicode__', 'lastname', 'get_firstname', 'role',
-                    'mentor', 'company', 'status']
-    list_filter = ['status', 'teams', 'role', 'mentor', 'company']
-    search_fields = ['^firstname', '^lastname', '^nickname']
-    inlines = [PersonEmailInline, PersonPhoneInline, PersonAddressInline,
-               RelationshipInline]
-    exclude = ['addresses']
-    radio_fields = {'gender': admin.HORIZONTAL}
-    fieldsets = [
-        (None, {'fields': ['firstname', 'lastname', 'suffix', 'nickname',
-                           'gender',
-                           ('birth_month', 'birth_day', 'birth_year'),
-                           'company', 'role', 'mentor',
-                           'status', 'shirt_size',
-                           'joined', 'badge', 'teams', 'left',
-                           'receive_email', 'contact_public']}),
-        ('Medical information', {'fields': ['medical', 'medications']}),
-        ('Misc information', {'fields': ['prospective_source', 'comments']}),
-    ]
-
-class StudentAdminForm(forms.ModelForm):
-    class Meta:
-        model = Student
-
-    def __init__(self, *args, **kwargs):
-        super(StudentAdminForm, self).__init__(*args, **kwargs)
-        self.fields['birth_year'].required = True
-        self.fields['birth_month'].required = True
-        self.fields['birth_day'].required = True
+        super(PersonAdminForm, self).__init__(*args, **kwargs)
         self.fields['school'].choices = schools_as_choices()
         self.fields['medical'].widget = \
                 forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
@@ -188,31 +156,26 @@ class StudentAdminForm(forms.ModelForm):
                 forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
         self.fields['comments'].widget = \
                 forms.widgets.Textarea(attrs={'rows':2, 'cols':60})
-        self.fields['joined'] = \
-                USDateFormField(widget=admin.widgets.AdminDateWidget)
-        self.fields['joined'].required = False
-        self.fields['left'] = \
-                USDateFormField(widget=admin.widgets.AdminDateWidget)
-        self.fields['left'].required = False
 
-class StudentAdmin(admin.ModelAdmin):
-    form = StudentAdminForm
-    list_display = ['__unicode__', 'lastname', 'get_firstname', 'school',
-                    'grad_year', 'status']
-    list_filter = ['status', 'teams', 'school', 'grad_year']
+class PersonAdmin(admin.ModelAdmin):
+    form = PersonAdminForm
+    list_display = ['__unicode__', 'lastname', 'get_firstname', 'active_roles']
+    list_filter = ['teams', RoleListFilter, StatusListFilter]
     search_fields = ['^firstname', '^lastname', '^nickname']
-    inlines = [PersonEmailInline, PersonPhoneInline, PersonAddressInline,
+    inlines = [PersonTeamInline,
+               PersonEmailInline,
+               PersonPhoneInline,
+               PersonAddressInline,
                RelationshipInline]
-    exclude = ['addresses']
     radio_fields = {'gender': admin.HORIZONTAL}
     fieldsets = [
         (None, {'fields': ['firstname', 'lastname', 'suffix', 'nickname',
                            'gender',
                            ('birth_month', 'birth_day', 'birth_year'),
                            ('school', 'grad_year'),
-                           'status', 'shirt_size',
-                           'joined', 'badge', 'teams', 'left',
-                           'receive_email', 'contact_public']}),
+                           'company',
+                           'shirt_size',
+                           'badge']}),
         ('Medical information', {'fields': ['medical', 'medications']}),
         ('Misc information', {'fields': ['prospective_source', 'comments']}),
     ]
@@ -225,10 +188,6 @@ class TimeRecordAdmin(admin.ModelAdmin):
     list_display = ['person', 'event', 'clock_in', 'clock_out', 'hours',
                     'recorded']
     list_filter = ['event', 'clock_in', 'recorded', 'person']
-
-class WaitlistEntryAdmin(admin.ModelAdmin):
-    list_display = ['student', 'program', 'team', 'date']
-    list_filter = ['program', 'team']
 
 class EventPersonInlineForm(forms.ModelForm):
     class Meta:
@@ -276,10 +235,7 @@ admin.site.register(Address, AddressAdmin)
 admin.site.register(Phone, PhoneAdmin)
 admin.site.register(RelationshipType)
 admin.site.register(Waiver, WaiverAdmin)
-admin.site.register(Contact, ContactAdmin)
-admin.site.register(Adult, AdultAdmin)
-admin.site.register(Student, StudentAdmin)
+admin.site.register(Person, PersonAdmin)
 admin.site.register(TimeRecord, TimeRecordAdmin)
-admin.site.register(WaitlistEntry, WaitlistEntryAdmin)
 admin.site.register(Event, EventAdmin)
 

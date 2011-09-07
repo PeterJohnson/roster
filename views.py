@@ -4,6 +4,7 @@ from django.utils.html import escape, linebreaks
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
+from django.db.models import Q
 
 from roster.models import *
 from roster.forms import *
@@ -20,49 +21,30 @@ def email_list(request):
     if request.method == 'GET' and request.GET:
         form = EmailListForm(request.GET)
         if form.is_valid():
-            results = PersonEmail.objects.none()
-            active = False
+            who = set(form.data.getlist('who'))
+            include_parents = 'Parent' in who
+            who.discard('Parent')
 
-            # General team selections
-            for formname, teamname in [('active_fll', 'FLL'),
-                                       ('active_ftc', 'FTC'),
-                                       ('active_frc', 'FRC')]:
-                if formname in form.data:
-                    results |= PersonEmail.objects.filter(
-                        primary=True,
-                        person__member__teams__name__contains=teamname,
-                        person__member__status='Active')
-                    active = True
+            people = PersonTeam.objects.filter(role__in=who,
+                    status__in=form.data.getlist('status'),
+                    team__in=form.data.getlist('team')).values('person')
 
-            # FLL waitlist
-            if 'fll_waitlist' in form.data:
-                results |= PersonEmail.objects.filter(
-                    primary=True,
-                    person__in=WaitlistEntry.objects.filter(
-                        program__name__contains='FLL').values('student'))
-                active = True
+            results = PersonEmail.objects.filter(primary=True, person__in=people)
 
-            # Filter down for various classes of people
-            who = form.data.getlist('who')
-            people = Member.objects.none()
-            if 'Parent' in who:
-                people |= Member.objects.filter(adult__role='Parent')
-            if 'Volunteer' in who:
-                people |= Member.objects.filter(adult__role='Volunteer')
-            if 'Mentor' in who:
-                people |= Member.objects.filter(adult__mentor=True)
-            if 'Student' in who:
-                people |= Member.objects.exclude(student=None)
+            # Follow relationship to parents from students if enabled.
+            if include_parents:
+                students = PersonTeam.objects.filter(role='Student',
+                        status__in=form.data.getlist('status'),
+                        team__in=form.data.getlist('team')).values('person')
+                parents = Relationship.objects.filter(person_from__in=students,
+                        relationship__type__in=['Father', 'Mother']).values('person_to')
+                results |= PersonEmail.objects.filter(primary=True, person__in=parents)
 
-            results = results.filter(person__in=people)
-
-            # CC parents on emails if enabled.  Only does one level
-            # (so if a parent has a CC on email, it won't get followed).
-            if active and 'cc_on_email' in form.data:
-                results |= PersonEmail.objects.filter(
-                    primary=True,
-                    person__relationship_from_set__person_from__in=results.values('person'),
-                    person__relationship_from_set__cc_on_email=True)
+            # CC on emails if enabled.  Only does one level.
+            if results and 'cc_on_email' in form.data:
+                cc = Relationship.objects.filter(person_from__in=people,
+                        cc_on_email=True).values('person_to')
+                results |= PersonEmail.objects.filter(primary=True, person__in=cc)
 
             # Uniquify and get related info to avoid additional queries
             results = results.select_related('person', 'email.email').distinct()
@@ -82,40 +64,30 @@ def phone_list(request):
     if request.method == 'GET' and request.GET:
         form = PhoneListForm(request.GET)
         if form.is_valid():
-            results = Person.objects.batch_select('phones').none()
+            who = set(form.data.getlist('who'))
+            include_parents = 'Parent' in who
+            who.discard('Parent')
 
-            # General team selections
-            for formname, teamname in [('active_fll', 'FLL'),
-                                       ('active_ftc', 'FTC'),
-                                       ('active_frc', 'FRC')]:
-                if formname in form.data:
-                    results |= Person.objects.batch_select('phones').filter(
-                        member__teams__name__contains=teamname,
-                        member__status='Active')
+            status = form.data.getlist('status')
+            teams = sorted(form.data.getlist('team'))
+            team_index = dict((int(x[1]), x[0]) for x in enumerate(teams))
+            print team_index
 
-            # FLL waitlist
-            if 'fll_waitlist' in form.data:
+            people = PersonTeam.objects.filter(role__in=who,
+                    status__in=status, team__in=teams).values('person')
+
+            results = Person.objects.batch_select('phones').filter(id__in=people)
+
+            # Follow relationship to parents from students if enabled.
+            if include_parents:
+                students = PersonTeam.objects.filter(role='Student',
+                        status__in=form.data.getlist('status'),
+                        team__in=form.data.getlist('team')).values('person')
+                parents = Relationship.objects.filter(person_from__in=students,
+                        relationship__type__in=['Father', 'Mother'])
+                parents_map = dict(parents.values_list('person_to', 'person_from'))
                 results |= Person.objects.batch_select('phones').filter(
-                    id__in=WaitlistEntry.objects.filter(
-                        program__name__contains='FLL').values('student'))
-
-            # Filter down for various classes of people
-            who = form.data.getlist('who')
-            parents = set()
-            volunteers = set()
-            mentors = set()
-            students = set()
-            if 'Parent' in who:
-                parents = set(Adult.objects.filter(role='Parent').values_list('id', flat=True))
-            if 'Volunteer' in who:
-                volunteers = set(Adult.objects.filter(role='Volunteer').values_list('id', flat=True))
-            if 'Mentor' in who:
-                mentors = set(Adult.objects.filter(mentor=True).values_list('id', flat=True))
-            if 'Student' in who:
-                students = set(Student.objects.all().values_list('id', flat=True))
-            people = parents|volunteers|mentors|students
-
-            results = results.filter(id__in=people)
+                        id__in=parents_map.keys())
 
             # Uniquify and get related info to avoid additional queries
             results = results.distinct()
@@ -123,16 +95,20 @@ def phone_list(request):
             final_results = []
             for result in results:
                 name = result.render_normal()
-                if result.id in mentors:
-                    role = "Mentor"
-                elif result.id in parents:
-                    role = "Parent"
-                elif result.id in volunteers:
-                    role = "Volunteer"
-                elif result.id in students:
-                    role = "Student"
-                else:
-                    role = ""
+
+                roles = [""]*len(teams)
+                if include_parents and result.id in parents_map:
+                    for x in PersonTeam.objects.filter(person__id=parents_map[result.id],
+                            status__in=status, team__in=teams):
+                        roles[team_index[x.team.id]] = "%sParent" % \
+                            (x.status == 'Prospective' and "Prospective " or "",)
+
+                for x in PersonTeam.objects.filter(person=result,
+                        status__in=status, team__in=teams):
+                    roles[team_index[x.team.id]] = "%s%s" % \
+                         (x.status == 'Prospective' and "Prospective " or "",
+                          x.role)
+
                 cell = ""
                 home = ""
                 for phone in result.phones_all:
@@ -140,9 +116,10 @@ def phone_list(request):
                         cell = phone.render_normal()
                     elif phone.location == 'Home':
                         home = phone.render_normal()
-                final_results.append(dict(name=name, role=role, cell=cell,
+                final_results.append(dict(name=name, roles=roles, cell=cell,
                                           home=home))
 
+            teams = Team.objects.filter(id__in=teams).order_by('id')
     else:
         form = PhoneListForm()
 
@@ -156,21 +133,18 @@ def event_email_list(request):
     if request.method == 'GET' and request.GET:
         form = EventEmailListForm(request.GET)
         if form.is_valid():
-            event_people = EventPerson.objects.filter(
+            people = EventPerson.objects.filter(
                 event=form.cleaned_data['event'],
-                role__in=form.cleaned_data['who'])
+                role__in=form.cleaned_data['who']).values('person')
 
-            results = PersonEmail.objects.filter(
-                primary=True,
-                person__in=event_people.values('person'))
+            results = PersonEmail.objects.filter(primary=True, person__in=people)
 
             # CC parents on emails if enabled.  Only does one level
             # (so if a parent has a CC on email, it won't get followed).
-            if form.data['who'] and 'cc_on_email' in form.data:
-                results |= PersonEmail.objects.filter(
-                    primary=True,
-                    person__relationship_from_set__person_from__in=results.values('person'),
-                    person__relationship_from_set__cc_on_email=True)
+            if people and 'cc_on_email' in form.data:
+                cc = Relationship.objects.filter(person_from__in=people,
+                        cc_on_email=True).values('person_to')
+                results |= PersonEmail.objects.filter(primary=True, person__in=cc)
 
             # Uniquify and get related info to avoid additional queries
             results = results.select_related('person', 'email.email').distinct()
@@ -180,48 +154,5 @@ def event_email_list(request):
         form = EventEmailListForm()
 
     return render_to_response("roster/email_list.html", locals(),
-                              context_instance=RequestContext(request))
-
-@login_required(login_url='/roster/login/')
-def team_membership(request):
-    """List members based on team membership."""
-
-    if request.method == 'GET' and request.GET:
-        form = TeamMembershipForm(request.GET)
-        if form.is_valid():
-            if form.data['team']:
-                results = Member.objects.filter(teams=form.data['team'])
-            else:
-                results = Member.objects.filter(teams=None)
-            results = results.exclude(status='Alumnus')
-
-            # Get various classes of people
-            parents = set(Adult.objects.filter(role='Parent').values_list('id', flat=True))
-            volunteers = set(Adult.objects.filter(role='Volunteer').values_list('id', flat=True))
-            mentors = set(Adult.objects.filter(mentor=True).values_list('id', flat=True))
-            students = set(Student.objects.all().values_list('id', flat=True))
-
-            final_results = []
-            for result in results:
-                name = result.render_normal()
-                if result.id in mentors:
-                    role = "Mentor"
-                elif result.id in parents:
-                    role = "Parent"
-                elif result.id in volunteers:
-                    role = "Volunteer"
-                elif result.id in students:
-                    role = "Student"
-                else:
-                    role = ""
-                final_results.append(dict(id=result.id, name=name,
-                                          role=role))
-
-    else:
-        form = TeamMembershipForm()
-
-
-    return render_to_response("roster/team_membership.html",
-                              locals(),
                               context_instance=RequestContext(request))
 

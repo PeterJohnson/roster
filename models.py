@@ -134,10 +134,42 @@ class Person(models.Model):
     suffix = models.CharField("Suffix", max_length=10, blank=True)
     nickname = models.CharField("Nickname", max_length=50, blank=True)
 
-    gender = models.CharField("Gender", max_length=1, choices=(
+    GENDER_CHOICES=(
         ('M', "Male"),
         ('F', "Female"),
+    )
+    gender = models.CharField("Gender", max_length=1, choices=GENDER_CHOICES)
+
+    company = models.ForeignKey(Company, null=True, blank=True)
+    school = models.ForeignKey(School, null=True, blank=True)
+    grad_year = models.IntegerField("Graduation year", null=True, blank=True)
+
+    badge = models.IntegerField("Badge Number", unique=True, null=True,
+                                blank=True)
+
+    teams = models.ManyToManyField(Team, through='PersonTeam', blank=True)
+
+    shirt_size = models.CharField("Shirt Size", max_length=3, blank=True,
+                                  choices=(
+        ('S', "Small"),
+        ('M', "Medium"),
+        ('L', "Large"),
+        ('XL', "XL"),
+        ('XXL', "XXL"),
     ))
+    medical = models.TextField("Medical Concerns", blank=True)
+    medications = models.TextField("Medications", blank=True)
+
+    birth_year = models.IntegerField(null=True, blank=True)
+    birth_month = models.IntegerField(null=True, blank=True)
+    birth_day = models.IntegerField(null=True, blank=True)
+
+    prospective_source = models.CharField("Prospective Source",
+                                          max_length=255, blank=True)
+
+    comments = models.TextField("Comments", blank=True)
+
+    position = models.ForeignKey(Position, null=True, blank=True)
 
     emails = models.ManyToManyField(Email, through='PersonEmail', blank=True)
     addresses = models.ManyToManyField(Address, blank=True)
@@ -160,6 +192,16 @@ class Person(models.Model):
             return self.firstname
     get_firstname.short_description = 'First Name'
 
+    def active_roles(self):
+        results = PersonTeam.objects.filter(person=self,
+                status__in=('Active', 'Prospective'))
+        results = results.select_related('team.name')
+        return "; ".join("%s%s, %s" %
+                (x.status == 'Prospective' and "Prospective " or "",
+                 x.role, x.team.name)
+                for x in results)
+    active_roles.short_description = 'Active Roles'
+
     objects = BatchManager()
 
     class Meta:
@@ -167,52 +209,30 @@ class Person(models.Model):
         ordering = ['firstname', 'lastname']
         unique_together = ['firstname', 'lastname', 'suffix']
 
-class Contact(Person):
-    class Meta:
-        verbose_name = "emergency contact"
-        verbose_name_plural = "emergency contacts"
+class PersonTeam(models.Model):
+    person = models.ForeignKey(Person)
+    team = models.ForeignKey(Team)
 
-class Member(Person):
-    badge = models.IntegerField("Badge Number", unique=True, null=True,
-                                blank=True)
+    ROLE_CHOICES=(
+        ('Mentor', "Mentor"),
+        ('Student', "Student"),
+        ('Fan', "Fan"),
+    )
+    role = models.CharField("Role", max_length=10, choices=ROLE_CHOICES)
 
-    status = models.CharField("Status", max_length=20, choices=(
-        ('Too Young', "Too Young"),
+    STATUS_CHOICES=(
         ('Prospective', "Prospective"),
         ('Active', "Active"),
         ('Alumnus', "Alumnus"),
         ('Disinterested', "Disinterested"),
-    ))
+    )
+    status = models.CharField("Status", max_length=20, choices=STATUS_CHOICES)
 
-    teams = models.ManyToManyField(Team, blank=True)
+    joined = models.DateField("Joined", null=True, blank=True)
+    left = models.DateField("Left", null=True, blank=True)
 
-    shirt_size = models.CharField("Shirt Size", max_length=3, blank=True,
-                                  choices=(
-        ('S', "Small"),
-        ('M', "Medium"),
-        ('L', "Large"),
-        ('XL', "XL"),
-        ('XXL', "XXL"),
-    ))
-    medical = models.TextField("Medical Concerns", blank=True)
-    medications = models.TextField("Medications", blank=True)
-
-    joined = models.DateField("Joined team", null=True, blank=True)
-    left = models.DateField("Left team", null=True, blank=True)
-
-    birth_year = models.IntegerField(null=True, blank=True)
-    birth_month = models.IntegerField(null=True, blank=True)
-    birth_day = models.IntegerField(null=True, blank=True)
-
-    prospective_source = models.CharField("Prospective Source",
-                                          max_length=255, blank=True)
-
-    comments = models.TextField("Comments", blank=True)
-
-    receive_email = models.BooleanField("Receive Email", default=True)
-    contact_public = models.BooleanField("Release Contact Info")
-
-    position = models.ForeignKey(Position, null=True, blank=True)
+    class Meta:
+        unique_together = ['team', 'person']
 
 class PersonEmail(models.Model):
     person = models.ForeignKey(Person)
@@ -228,53 +248,6 @@ class Waiver(models.Model):
     person = models.ForeignKey(Person)
     org = models.ForeignKey(Organization)
     year = models.IntegerField("Year")
-
-class Adult(Member):
-    role = models.CharField("Role", max_length=10, choices=(
-        ('Parent', "Parent"),
-        ('Volunteer', "Volunteer"),
-    ))
-    company = models.ForeignKey(Company, null=True, blank=True)
-    mentor = models.BooleanField(default=False)
-
-    def add_child(self, student):
-        student.add_parent(self)
-
-class Student(Member):
-    school = models.ForeignKey(School, null=True)
-    grad_year = models.IntegerField("Graduation year", null=True)
-
-    def add_parent(self, adult, relationship=None, cc_on_email=False):
-        if relationship is None:
-            if adult.gender == "F":
-                relationship = RelationshipType.objects.get(type="Mother")
-            elif adult.gender == "M":
-                relationship = RelationshipType.objects.get(type="Father")
-            else:
-                relationship = RelationshipType.objects.get(type="Parent")
-
-        # Student->Parent
-        try:
-            r = Relationship(person_from=self,
-                             person_to=adult,
-                             relationship=relationship,
-                             cc_on_email=cc_on_email)
-            r.save()
-        except IntegrityError:
-            pass
-
-        # Parent->Student
-        try:
-            r = Relationship(person_from=adult,
-                             person_to=self,
-                             relationship=RelationshipType.objects.get(type="Child"),
-                             cc_on_email=False)
-            r.save()
-        except IntegrityError:
-            pass
-
-        # Siblings
-        siblings = Relationship.objects.filter(person_from=adult, relationship=RelationshipType.objects.get(type="Child"))
 
 class Relationship(models.Model):
     person_from = models.ForeignKey(Person,
@@ -327,14 +300,4 @@ class TimeRecord(models.Model):
     clock_out = models.DateTimeField("Clocked out", null=True, blank=True)
     hours = models.FloatField("Hours")
     recorded = models.DateField("Recorded")
-
-class WaitlistEntry(models.Model):
-    student = models.ForeignKey(Student)
-    program = models.ForeignKey(Program)
-    team = models.ForeignKey(Team, null=True, blank=True)
-    date = models.DateField("Wait list date", null=True, blank=True)
-
-    class Meta:
-        verbose_name_plural = "Waitlist entries"
-        unique_together = ['student', 'program']
 

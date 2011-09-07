@@ -16,14 +16,18 @@
 <table border="1">
     <tr>
 	<td>Name</td>
-	<td>Role</td>
+	{% for team in teams %}
+	<td>{{ team }}</td>
+	{% endfor %}
 	<td>Cell</td>
 	<td>Home</td>
     </tr>
     {% for result in final_results %}
     <tr>
 	<td>{{ result.name }}</td>
-	<td>{{ result.role }}</td>
+	{% for role in result.roles %}
+	<td>{{ role }}</td>
+	{% endfor %}
 	<td>{{ result.cell }}</td>
 	<td>{{ result.home }}</td>
     </tr>
