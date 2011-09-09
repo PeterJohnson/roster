@@ -125,9 +125,13 @@ class Phone(models.Model):
 class RelationshipType(models.Model):
     type = models.CharField(max_length=30, unique=True)
     parent = models.BooleanField("Parent", default=False)
+    sort_order = models.IntegerField("Sort order")
 
     def __unicode__(self):
         return self.type
+
+    class Meta:
+        ordering = ['sort_order']
 
 class Person(models.Model):
     firstname = models.CharField("First Name", max_length=100)

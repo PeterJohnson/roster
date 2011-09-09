@@ -180,6 +180,9 @@ class PersonAdmin(admin.ModelAdmin):
         ('Misc information', {'fields': ['prospective_source', 'comments']}),
     ]
 
+class RelationshipTypeAdmin(admin.ModelAdmin):
+    list_display = ['type', 'parent', 'sort_order']
+
 class WaiverAdmin(admin.ModelAdmin):
     list_display = ['person', 'org', 'year']
     list_filter = ['org', 'year', 'person']
@@ -233,7 +236,7 @@ admin.site.register(Company)
 admin.site.register(Email, EmailAdmin)
 admin.site.register(Address, AddressAdmin)
 admin.site.register(Phone, PhoneAdmin)
-admin.site.register(RelationshipType)
+admin.site.register(RelationshipType, RelationshipTypeAdmin)
 admin.site.register(Waiver, WaiverAdmin)
 admin.site.register(Person, PersonAdmin)
 admin.site.register(TimeRecord, TimeRecordAdmin)
