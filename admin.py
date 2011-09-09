@@ -48,6 +48,7 @@ class EmailPersonInline(admin.TabularInline):
 
 class EmailAdmin(admin.ModelAdmin):
     list_display = ['email', 'location']
+    search_fields = ['email']
     #inlines = [EmailPersonInline]
 
 class AddressPersonInline(admin.TabularInline):
