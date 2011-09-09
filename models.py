@@ -196,9 +196,10 @@ class Person(models.Model):
         results = PersonTeam.objects.filter(person=self,
                 status__in=('Active', 'Prospective'))
         results = results.select_related('team.name')
-        return "; ".join("%s%s, %s" %
-                (x.status == 'Prospective' and "Prospective " or "",
-                 x.role, x.team.name)
+        return ", ".join("%s (%s%s)" %
+                (x.team.name,
+                 x.status == 'Prospective' and "Prospective " or "",
+                 x.role)
                 for x in results)
     active_roles.short_description = 'Active Roles'
 
