@@ -124,6 +124,7 @@ class Phone(models.Model):
 
 class RelationshipType(models.Model):
     type = models.CharField(max_length=30, unique=True)
+    parent = models.BooleanField("Parent", default=False)
 
     def __unicode__(self):
         return self.type
