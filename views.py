@@ -33,11 +33,12 @@ def email_list(request):
 
             # Follow relationship to parents from students if enabled.
             if include_parents:
+                parent_relationships = RelationshipType.objects.filter(parent=True).values('id')
                 students = PersonTeam.objects.filter(role='Student',
                         status__in=form.data.getlist('status'),
                         team__in=form.data.getlist('team')).values('person')
                 parents = Relationship.objects.filter(person_from__in=students,
-                        relationship__type__in=['Father', 'Mother']).values('person_to')
+                        relationship__in=parent_relationships).values('person_to')
                 results |= PersonEmail.objects.filter(primary=True, person__in=parents)
 
             # CC on emails if enabled.  Only does one level.
@@ -80,11 +81,12 @@ def phone_list(request):
 
             # Follow relationship to parents from students if enabled.
             if include_parents:
+                parent_relationships = RelationshipType.objects.filter(parent=True).values('id')
                 students = PersonTeam.objects.filter(role='Student',
                         status__in=form.data.getlist('status'),
                         team__in=form.data.getlist('team')).values('person')
                 parents = Relationship.objects.filter(person_from__in=students,
-                        relationship__type__in=['Father', 'Mother'])
+                        relationship__in=parent_relationships)
                 parents_map = dict(parents.values_list('person_to', 'person_from'))
                 results |= Person.objects.batch_select('phones').filter(
                         id__in=parents_map.keys())
