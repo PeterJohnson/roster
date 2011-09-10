@@ -156,3 +156,67 @@ def event_email_list(request):
     return render_to_response("roster/email_list.html", locals(),
                               context_instance=RequestContext(request))
 
+@login_required(login_url='/roster/login/')
+def team_reg_verify(request):
+    """Team registration verification."""
+
+    if request.method == 'GET' and request.GET:
+        form = TeamRegVerifyForm(request.GET)
+        if form.is_valid():
+            people = PersonTeam.objects.filter(
+                    role__in=form.data.getlist('who'),
+                    status='Active',
+                    team__in=form.data.getlist('team')).values('person')
+
+            people = Person.objects.filter(id__in=people)
+
+            parent_relationships = RelationshipType.objects.filter(parent=True).values_list('id', flat=True)
+
+            results = []
+            for person in people:
+                r = {}
+                r["person"] = person
+                if person.gender == 'M':
+                    r["gender"] = "Male"
+                elif person.gender == 'F':
+                    r["gender"] = "Female"
+                else:
+                    r["gender"] = ""
+                r["emails"] = PersonEmail.objects.filter(person=person)
+                r["addresses"] = person.addresses.all()
+                r["phones"] = PersonPhone.objects.filter(person=person)
+
+                parents = Relationship.objects.filter(
+                        person_from=person,
+                        relationship__in=parent_relationships) \
+                                .select_related('person_to')
+                r["parents"] = []
+                for x in parents:
+                    parent = {}
+                    parent["person"] = x.person_to
+                    parent["relationship"] = x.relationship
+                    parent["cc_on_email"] = x.cc_on_email
+                    parent["emergency_contact"] = x.emergency_contact
+                    parent["emails"] = PersonEmail.objects.filter(person=x.person_to)
+                    parent["addresses"] = x.person_to.addresses.all()
+                    parent["phones"] = PersonPhone.objects.filter(person=x.person_to)
+                    r["parents"].append(parent)
+
+                r["emergency"] = []
+                for x in Relationship.objects.filter(
+                        person_from=person, emergency_contact=True) \
+                        .exclude(id__in=parents.values('id')) \
+                        .select_related('person_to'):
+                    contact = {}
+                    contact["person"] = x.person_to
+                    contact["relationship"] = x.relationship
+                    contact["phones"] = PersonPhone.objects.filter(person=x.person_to)
+                    r["emergency"].append(contact)
+
+                results.append(r)
+    else:
+        form = TeamRegVerifyForm()
+
+    return render_to_response("roster/team_reg_verify.html", locals(),
+                              context_instance=RequestContext(request))
+

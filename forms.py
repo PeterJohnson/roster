@@ -72,6 +72,19 @@ class EventEmailListForm(forms.Form):
         widget=forms.RadioSelect(renderer=HorizRadioRenderer),
         choices=((',',","),(';',";")), initial=',')
 
+class TeamRegVerifyForm(forms.Form):
+    who = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=(
+            ('Mentor', "Mentor"),
+            ('Student', "Student"),
+        ),
+        initial=['Mentor', 'Student'])
+
+    team = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=[(x.id, x.name) for x in Team.objects.all()])
+
 class TeamMembershipForm(forms.Form):
     team = forms.ModelChoiceField(
         queryset=Team.objects.all(), required=False)

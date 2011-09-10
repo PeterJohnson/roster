@@ -1,2 +1,21 @@
 #email_list ul {list-style-type:none; margin-left: 0; padding-left: 1em; text-indent: -1em; }
 #phone_list ul {list-style-type:none; margin-left: 0; padding-left: 1em; text-indent: -1em; }
+#team_reg_verify_list ul {list-style-type:none; margin-left: 0; padding-left: 1em; text-indent: -1em; }
+
+@media all
+{
+    .page-break { display:none; }
+}
+
+@media print
+{
+    .page-break { display:block; page-break-before:always; }
+    .noprint { display:none; }
+    #header { display:none; }
+    #navbar { display:none; }
+    #left { display:none; }
+    #right { display:none; }
+    #footer { display:none; }
+    table { page-break-inside: avoid; }
+}
+

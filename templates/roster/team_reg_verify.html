@@ -1,0 +1,330 @@
+{% extends "roster/base.html" %}
+
+{% block content %}
+<div class="noprint">
+<form method="get" action=".">
+<table id="team_reg_verify_list">
+    {{ form }}
+</table>
+<tr>
+    <td colspan="2"><input type="submit" value="Generate" /></td>
+</tr>
+</form>
+
+{# people.query }}<br /><br />#}
+</div>
+{% if results %}
+{% for result in results %}
+<br/>
+<table border="1" width="100%" cellspacing="0">
+<thead>
+    <tr style="background-color: rgb(55,88,150); color: white">
+	<th colspan="3" align="left">Person Information</th>
+    </tr>
+</thead>
+<tbody>
+    <tr>
+	<td style="width:120pt">Legal Name</td>
+	<td style="width:120pt">First and Last</td>
+	<td>{{ result.person.firstname }}
+	    {{ result.person.lastname }}
+	    {{ result.person.suffix }}</td>
+    </tr>
+    <tr>
+	<td>Nickname</td>
+	<td></td>
+	<td>{{ result.person.nickname }}</td>
+    </tr>
+    <tr>
+	<td>Gender</td>
+	<td></td>
+	<td>{{ result.person.get_gender_display }}</td>
+    </tr>
+    <tr>
+	<td>Date of Birth</td>
+	<td>m/d/yyyy</td>
+	<td>{{ result.person.birth_month }} /
+            {{ result.person.birth_day }} /
+	    {{ result.person.birth_year }}</td>
+    </tr>
+    <tr>
+	<td>School</td>
+	<td></td>
+	<td>{{ result.person.school }}</td>
+    </tr>
+    <tr>
+	<td>HS Graduation Year</td>
+	<td></td>
+	<td>{{ result.person.grad_year }}</td>
+    </tr>
+    <tr>
+	<td>Company</td>
+	<td></td>
+	<td>{{ result.person.company }}</td>
+    </tr>
+    <tr>
+	<td>Shirt Size</td>
+	<td></td>
+	<td>{{ result.person.shirt_size }}</td>
+    </tr>
+    {% if result.emails %}
+    {% for email in result.emails %}
+    <tr>
+	<td>Email</td>
+	<td>{{ email.email.location }}</td>
+	<td>{{ email.email.email }}
+	    {% if email.primary %}(primary){% endif %}</td>
+    </tr>
+    {% endfor %}
+    {% else %}
+    <tr>
+	<td>Email</td>
+	<td>Address</td>
+	<td></td>
+    </tr>
+    {% endif %}
+    {% if result.phones %}
+    {% for phone in result.phones %}
+    <tr>
+	<td>Phone</td>
+	<td>{{ phone.phone.get_location_display }}</td>
+	<td>{{ phone.phone.render_normal }}
+	    {% if phone.primary %}(primary){% endif %}</td>
+    </tr>
+    {% endfor %}
+    {% else %}
+    <tr>
+	<td>Phone</td>
+	<td>Cell</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Phone</td>
+	<td>Home</td>
+	<td></td>
+    </tr>
+    {% endif %}
+    {% if result.addresses %}
+    {% for address in result.addresses %}
+    <tr>
+	<td rowspan="3">Address</td>
+	<td>Line 1</td>
+	<td>{{ address.line1 }}</td>
+    </tr>
+    <tr>
+	<td>Line 2</td>
+	<td>{{ address.line2 }}</td>
+    </tr>
+    <tr>
+	<td>City, State, Zip</td>
+	<td>{{ address.city }}, {{ address.state }} {{ address.zipcode }}</td>
+    </tr>
+    {% endfor %}
+    {% else %}
+    <tr>
+	<td rowspan="3">Address</td>
+	<td>Line 1</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Line 2</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>City, State, Zip</td>
+	<td></td>
+    </tr>
+    {% endif %}
+    <tr>
+	<td rowspan="2">Medical</td>
+	<td>Conditions/Allergies</td>
+	<td>{{ result.medical }}</td>
+    </tr>
+    <tr>
+	<td>Medications</td>
+	<td>{{ result.medications }}</td>
+    </tr>
+</tbody>
+</table>
+{% for parent in result.parents %}
+<br/>
+<table border="1" width="100%" cellspacing="0">
+<thead>
+    <tr style="background-color: rgb(55,88,150); color: white">
+	<th colspan="3" align="left">{{ parent.relationship }}'s Information</th>
+    </tr>
+</thead>
+<tbody>
+    <tr>
+	<td style="width:120pt">Name</td>
+	<td style="width:120pt">First and Last</td>
+	<td>{{ parent.person.firstname }}
+	    {{ parent.person.lastname }}
+	    {{ parent.person.suffix }}</td>
+    </tr>
+    <tr>
+	<td>Company</td>
+	<td></td>
+	<td>{{ parent.person.company }}</td>
+    </tr>
+    <tr>
+	<td>Shirt Size</td>
+	<td></td>
+	<td>{{ parent.person.shirt_size }}</td>
+    </tr>
+    <tr>
+	<td>Emergency Contact</td>
+	<td></td>
+	<td>{% if parent.emergency_contact %}Yes{% else %}No{% endif %}</td>
+    </tr>
+    <tr>
+	<td>CC on Student Emails</td>
+	<td></td>
+	<td>{% if parent.cc_on_email %}Yes{% else %}No{% endif %}</td>
+    </tr>
+    {% if parent.emails %}
+    {% for email in parent.emails %}
+    <tr>
+	<td>Email</td>
+	<td>{{ email.email.location }}</td>
+	<td>{{ email.email.email }}
+	    {% if email.primary %}(primary){% endif %}</td>
+    </tr>
+    {% endfor %}
+    {% else %}
+    <tr>
+	<td>Email</td>
+	<td>Address</td>
+	<td></td>
+    </tr>
+    {% endif %}
+    {% if parent.phones %}
+    {% for phone in parent.phones %}
+    <tr>
+	<td>Phone</td>
+	<td>{{ phone.phone.get_location_display }}</td>
+	<td>{{ phone.phone.render_normal }}
+	    {% if phone.primary %}(primary){% endif %}</td>
+    </tr>
+    {% endfor %}
+    {% else %}
+    <tr>
+	<td>Phone</td>
+	<td>Cell</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Phone</td>
+	<td>Home</td>
+	<td></td>
+    </tr>
+    {% endif %}
+    {% if parent.addresses %}
+    {% for address in parent.addresses %}
+    <tr>
+	<td rowspan="3">Address</td>
+	<td>Line 1</td>
+	<td>{{ address.line1 }}</td>
+    </tr>
+    <tr>
+	<td>Line 2</td>
+	<td>{{ address.line2 }}</td>
+    </tr>
+    <tr>
+	<td>City, State, Zip</td>
+	<td>{{ address.city }}, {{ address.state }} {{ address.zipcode }}</td>
+    </tr>
+    {% endfor %}
+    {% else %}
+    <tr>
+	<td rowspan="3">Address</td>
+	<td>Line 1</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Line 2</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>City, State, Zip</td>
+	<td></td>
+    </tr>
+    {% endif %}
+</tbody>
+</table>
+{% endfor %}
+{% for contact in result.emergency %}
+<br/>
+<table border="1" width="100%" cellspacing="0">
+<thead>
+    <tr style="background-color: rgb(55,88,150); color: white">
+	<th colspan="3" align="left">Emergency Contact Information</th>
+    </tr>
+</thead>
+<tbody>
+    <tr>
+	<td style="width:120pt">Name</td>
+	<td style="width:120pt">First and Last</td>
+	<td>{{ contact.person.firstname }}
+	    {{ contact.person.lastname }}
+	    {{ contact.person.suffix }}</td>
+    </tr>
+    <tr>
+	<td>Relationship</td>
+	<td></td>
+	<td>{{ contact.relationship }}</td>
+    </tr>
+    <tr>
+	<td>Gender</td>
+	<td></td>
+	<td>{{ contact.person.get_gender_display }}</td>
+    </tr>
+    {% if contact.phones %}
+    {% for phone in contact.phones %}
+    <tr>
+	<td>Phone</td>
+	<td>{{ phone.phone.get_location_display }}</td>
+	<td>{{ phone.phone.render_normal }}
+	    {% if phone.primary %}(primary){% endif %}</td>
+    </tr>
+    {% endfor %}
+    {% else %}
+    <tr>
+	<td>Phone</td>
+	<td>Cell</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Phone</td>
+	<td>Home</td>
+	<td></td>
+    </tr>
+    {% endif %}
+</tbody>
+</table>
+{% endfor %}
+<br/>
+<p>Information Review: __________________________</p>
+<table width="100%">
+    <tr>
+	<td rowspan="2" valign="top">Administration Only:</td>
+	<td align="right">Release Form Received:</td>
+	<td>____</td>
+	<td align="right">Information Logged:</td>
+	<td>MM/DD/YY</td>
+    </tr>
+    <tr>
+	<td align="right">Student Contract Received:</td>
+	<td>____</td>
+	<td align="right">Payment Received/Logged:</td>
+	<td>MM/DD/YY</td>
+    </tr>
+</table>
+<div class="noprint"><hr/></div>
+<div class="page-break"/>
+{% endfor %}
+{% else %}
+<p>No results.</p>
+{% endif %}
+
+{% endblock %}
