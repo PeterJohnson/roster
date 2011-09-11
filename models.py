@@ -249,7 +249,7 @@ class PersonEmail(models.Model):
     primary = models.BooleanField("Primary", default=True)
 
     def __unicode__(self):
-        return "%s (%s)" % (self.email, self.primary)
+        return "%s (%s)" % (self.email, self.primary and "Primary" or "Alternate")
 
 class PersonPhone(models.Model):
     person = models.ForeignKey(Person)
@@ -257,7 +257,7 @@ class PersonPhone(models.Model):
     primary = models.BooleanField("Primary", default=True)
 
     def __unicode__(self):
-        return "%s (%s)" % (self.phone, self.primary)
+        return "%s (%s)" % (self.phone, self.primary and "Primary" or "Alternate")
 
 class Waiver(models.Model):
     person = models.ForeignKey(Person)
