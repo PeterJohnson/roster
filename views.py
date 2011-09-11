@@ -170,7 +170,7 @@ def team_reg_verify(request):
                     status='Active',
                     team__in=form.data.getlist('team')).values('person')
 
-            people = Person.objects.filter(id__in=people)
+            people = Person.objects.filter(id__in=people).order_by('lastname', 'firstname')
 
             parent_relationships = RelationshipType.objects.filter(parent=True).values_list('id', flat=True)
 
