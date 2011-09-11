@@ -237,6 +237,9 @@ class PersonTeam(models.Model):
     joined = models.DateField("Joined", null=True, blank=True)
     left = models.DateField("Left", null=True, blank=True)
 
+    def __unicode__(self):
+        return "%s %s, %s" % (self.status, self.role, self.team.name)
+
     class Meta:
         unique_together = ['team', 'person']
 
@@ -245,15 +248,24 @@ class PersonEmail(models.Model):
     email = models.ForeignKey(Email)
     primary = models.BooleanField("Primary", default=True)
 
+    def __unicode__(self):
+        return "%s (%s)" % (self.email, self.primary)
+
 class PersonPhone(models.Model):
     person = models.ForeignKey(Person)
     phone = models.ForeignKey(Phone)
     primary = models.BooleanField("Primary", default=True)
 
+    def __unicode__(self):
+        return "%s (%s)" % (self.phone, self.primary)
+
 class Waiver(models.Model):
     person = models.ForeignKey(Person)
     org = models.ForeignKey(Organization)
     year = models.IntegerField("Year")
+
+    def __unicode__(self):
+        return "%s (%s)" % (self.org, self.year)
 
 class Relationship(models.Model):
     person_from = models.ForeignKey(Person,
@@ -263,6 +275,9 @@ class Relationship(models.Model):
     relationship = models.ForeignKey(RelationshipType)
     cc_on_email = models.BooleanField("CC on Emails", default=False)
     emergency_contact = models.BooleanField("Emergency Contact", default=False)
+
+    def __unicode__(self):
+        return "%s (%s)" % (self.person_to, self.relationship)
 
     class Meta:
         unique_together = ['person_from', 'person_to']
@@ -295,6 +310,9 @@ class EventPerson(models.Model):
     fee_paid = models.DecimalField(decimal_places=2, max_digits=5,
                                    default=0.0)
     comments = models.TextField("Comments", blank=True)
+
+    def __unicode__(self):
+        return "%s (%s) - %s" % (self.person, self.role, self.fee_paid)
 
     class Meta:
         unique_together = ['event', 'person']
