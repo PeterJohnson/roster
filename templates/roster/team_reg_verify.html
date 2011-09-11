@@ -146,6 +146,7 @@
     </tr>
 </tbody>
 </table>
+{% if result.parents %}
 {% for parent in result.parents %}
 <br/>
 <table border="1" width="100%" cellspacing="0">
@@ -253,6 +254,72 @@
 </tbody>
 </table>
 {% endfor %}
+{% else %}
+<br/>
+<table border="1" width="100%" cellspacing="0">
+<thead>
+    <tr style="background-color: rgb(55,88,150); color: white">
+	<th colspan="3" align="left">Parent's Information</th>
+    </tr>
+</thead>
+<tbody>
+    <tr>
+	<td style="width:120pt">Name</td>
+	<td style="width:120pt">First and Last</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Company</td>
+	<td></td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Shirt Size</td>
+	<td></td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Emergency Contact</td>
+	<td></td>
+	<td>Yes / No</td>
+    </tr>
+    <tr>
+	<td>CC on Student Emails</td>
+	<td></td>
+	<td>Yes / No</td>
+    </tr>
+    <tr>
+	<td>Email</td>
+	<td>Address</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Phone</td>
+	<td>Cell</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Phone</td>
+	<td>Home</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td rowspan="3">Address</td>
+	<td>Line 1</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Line 2</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>City, State, Zip</td>
+	<td></td>
+    </tr>
+</tbody>
+</table>
+{% endif %}
+{% if result.emergency %}
 {% for contact in result.emergency %}
 <br/>
 <table border="1" width="100%" cellspacing="0">
@@ -303,6 +370,43 @@
 </tbody>
 </table>
 {% endfor %}
+{% else %}
+<br/>
+<table border="1" width="100%" cellspacing="0">
+<thead>
+    <tr style="background-color: rgb(55,88,150); color: white">
+	<th colspan="3" align="left">Emergency Contact Information</th>
+    </tr>
+</thead>
+<tbody>
+    <tr>
+	<td style="width:120pt">Name</td>
+	<td style="width:120pt">First and Last</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Relationship</td>
+	<td></td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Gender</td>
+	<td></td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Phone</td>
+	<td>Cell</td>
+	<td></td>
+    </tr>
+    <tr>
+	<td>Phone</td>
+	<td>Home</td>
+	<td></td>
+    </tr>
+</tbody>
+</table>
+{% endif %}
 <br/>
 <p>Information Review: __________________________</p>
 <table width="100%">
