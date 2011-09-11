@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
 from django.contrib.localflavor.us.forms import *
 from django import forms
 from roster.models import *
@@ -228,6 +229,10 @@ class EventAdmin(admin.ModelAdmin):
     search_fields = ['name']
     inlines = [EventPersonInline]
 
+class LogEntryAdmin(admin.ModelAdmin):
+    list_display = ['__unicode__', 'user', 'action_time']
+    readonly_fields = ('content_type', 'user', 'action_time')
+
 admin.site.register(Organization)
 admin.site.register(Program)
 admin.site.register(Team, TeamAdmin)
@@ -242,4 +247,5 @@ admin.site.register(Waiver, WaiverAdmin)
 admin.site.register(Person, PersonAdmin)
 admin.site.register(TimeRecord, TimeRecordAdmin)
 admin.site.register(Event, EventAdmin)
+admin.site.register(LogEntry, LogEntryAdmin)
 
