@@ -156,6 +156,9 @@ class Person(models.Model):
 
     shirt_size = models.CharField("Shirt Size", max_length=3, blank=True,
                                   choices=(
+        ('YS', "Youth Small"),
+        ('YM', "Youth Medium"),
+        ('YL', "Youth Large"),
         ('S', "Small"),
         ('M', "Medium"),
         ('L', "Large"),
