@@ -215,7 +215,7 @@ class Person(models.Model):
 
     class Meta:
         verbose_name_plural = "People"
-        ordering = ['firstname', 'lastname']
+        ordering = ['lastname', 'firstname']
         unique_together = ['firstname', 'lastname', 'suffix']
 
 class PersonTeam(models.Model):
