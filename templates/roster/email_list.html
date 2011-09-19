@@ -1,6 +1,7 @@
 {% extends "roster/base.html" %}
 
 {% block content %}
+<div class="noprint">
 <form method="get" action=".">
 <table id="email_list">
     {{ form }}
@@ -9,6 +10,7 @@
     <td colspan="2"><input type="submit" value="Generate" /></td>
 </tr>
 </form>
+</div>
 
 {% if results %}
 {# results.query }}<br />#}<br />
