@@ -23,7 +23,7 @@
     </tr>
     {% for result in results %}
     <tr>
-	<td>{{ result }}</td>
+	<td><a href="/admin/roster/person/{{result.id}}/">{{ result }}</a></td>
 	<td>{{ result.grad_year }}</td>
 	<td>{{ result.active_roles }}</td>
     </tr>
