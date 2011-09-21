@@ -175,6 +175,35 @@ def event_email_list(request):
     return render_to_response("roster/email_list.html", locals(),
                               context_instance=RequestContext(request))
 
+@login_required(login_url='/roster/login/')
+def class_team_list(request):
+    """List of people showing their team membership."""
+
+    if request.method == 'GET' and request.GET:
+        form = ClassTeamListForm(request.GET)
+        if form.is_valid():
+            results = Person.objects.filter(
+                    grad_year__gte=form.data["class_begin"],
+                    grad_year__lte=form.data["class_end"])
+
+            exclude_people = PersonTeam.objects\
+                    .filter(person__in=results.values('id'))\
+                    .exclude(status__in=('Active', 'Prospective'))\
+                    .values('person')
+            results = results.exclude(id__in=exclude_people)
+
+            if 'no_team' in form.data:
+                exclude_people = PersonTeam.objects\
+                        .filter(person__in=results.values('id'))\
+                        .values('person')
+                results = results.exclude(id__in=exclude_people)
+    else:
+        form = ClassTeamListForm()
+
+    return render_to_response("roster/class_team_list.html", locals(),
+                              context_instance=RequestContext(request))
+
+
 class Checkbox(Flowable):
     """A checkbox flowable."""
     def __init__(self, checked, size=0.25*inch, color=colors.black):

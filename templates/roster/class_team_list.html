@@ -1,0 +1,36 @@
+{% extends "roster/base.html" %}
+
+{% block content %}
+<div class="noprint">
+<form method="get" action=".">
+<table id="class_team_list">
+    {{ form }}
+</table>
+<tr>
+    <td colspan="2"><input type="submit" value="Generate" /></td>
+</tr>
+</form>
+</div>
+
+{# results.query }}<br /><br />#}
+{% if results %}
+<br/>
+<table border="1">
+    <tr>
+	<td>Name</td>
+	<td>Class</td>
+	<td>Active Teams</td>
+    </tr>
+    {% for result in results %}
+    <tr>
+	<td>{{ result }}</td>
+	<td>{{ result.grad_year }}</td>
+	<td>{{ result.active_roles }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No results.</p>
+{% endif %}
+
+{% endblock %}

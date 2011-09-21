@@ -93,3 +93,9 @@ class TeamMembershipForm(forms.Form):
     team = forms.ModelChoiceField(
         queryset=Team.objects.all(), required=False)
 
+class ClassTeamListForm(forms.Form):
+    no_team = forms.BooleanField(label="Only no team", required=False,
+                                 initial=False)
+    class_begin = forms.IntegerField(label="Beginning class")
+    class_end = forms.IntegerField(label="Ending class")
+

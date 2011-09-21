@@ -1,6 +1,7 @@
 #email_list ul {list-style-type:none; margin-left: 0; padding-left: 1em; text-indent: -1em; }
 #phone_list ul {list-style-type:none; margin-left: 0; padding-left: 1em; text-indent: -1em; }
 #team_reg_verify_list ul {list-style-type:none; margin-left: 0; padding-left: 1em; text-indent: -1em; }
+#class_team_list ul {list-style-type:none; margin-left: 0; padding-left: 1em; text-indent: -1em; }
 
 @media all
 {
