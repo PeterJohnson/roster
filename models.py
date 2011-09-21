@@ -379,6 +379,7 @@ class EventPerson(models.Model):
 
     class Meta:
         unique_together = ['event', 'person']
+        ordering = ['event', 'person']
 
 class TimeRecord(models.Model):
     person = models.ForeignKey(Person)
