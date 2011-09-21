@@ -9,6 +9,11 @@ class Organization(models.Model):
     def __unicode__(self):
         return self.name
 
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
+
     class Meta:
         ordering = ['name']
 
@@ -19,6 +24,11 @@ class Program(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
 
     class Meta:
         ordering = ['name']
@@ -31,12 +41,22 @@ class Team(models.Model):
     def __unicode__(self):
         return self.name
 
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
+
     class Meta:
         ordering = ['name']
 
 class Position(models.Model):
     title = models.CharField(max_length=50, unique=True)
     steering = models.BooleanField(default=False)
+
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
 
     class Meta:
         ordering = ['title']
@@ -54,6 +74,11 @@ class School(models.Model):
     def __unicode__(self):
         return "%s" % self.longname
 
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
+
     class Meta:
         ordering = ['longname']
 
@@ -62,6 +87,11 @@ class Company(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
 
     class Meta:
         verbose_name_plural = "Companies"
@@ -78,6 +108,11 @@ class Email(models.Model):
     def __unicode__(self):
         return self.email
 
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
+
     class Meta:
         ordering = ['email']
 
@@ -90,6 +125,11 @@ class Address(models.Model):
 
     def __unicode__(self):
         return "%s, %s, %s" % (self.line1, self.city, self.state)
+
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
 
     class Meta:
         verbose_name_plural = "Addresses"
@@ -118,6 +158,11 @@ class Phone(models.Model):
         else:
             return self.phone
 
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
+
     class Meta:
         ordering = ['phone']
         unique_together = ['phone', 'ext']
@@ -129,6 +174,11 @@ class RelationshipType(models.Model):
 
     def __unicode__(self):
         return self.type
+
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
 
     class Meta:
         ordering = ['sort_order']
@@ -212,6 +262,11 @@ class Person(models.Model):
     active_roles.short_description = 'Active Roles'
 
     objects = BatchManager()
+
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
 
     class Meta:
         verbose_name_plural = "People"
@@ -299,6 +354,11 @@ class Event(models.Model):
 
     def __unicode__(self):
         return "%s: %s" % (self.date.strftime('%a %b %d, %Y'), self.name)
+
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                setattr(self, field.name, getattr(self, field.name).strip())
 
     class Meta:
         ordering = ['date', 'time']
