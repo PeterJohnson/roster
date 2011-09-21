@@ -82,6 +82,7 @@ class PhonePersonInline(admin.TabularInline):
 class PhoneAdmin(admin.ModelAdmin):
     list_display = ['full_phone', 'location']
     #inlines = [PhonePersonInline]
+    search_fields = ['phone', 'ext']
 
     def full_phone(self, obj):
         if obj.ext:
