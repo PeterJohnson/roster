@@ -35,7 +35,9 @@ class EmailListForm(forms.Form):
                                      required=False, initial=True)
     separator = forms.ChoiceField(
         widget=forms.RadioSelect(renderer=HorizRadioRenderer),
-        choices=((',',","),(';',";")), initial=',')
+        choices=((',',","),(';',";"),('',"None")),
+        initial=',',
+        required=False)
 
 class PhoneListForm(forms.Form):
     who = forms.MultipleChoiceField(
@@ -70,7 +72,9 @@ class EventEmailListForm(forms.Form):
                                      required=False, initial=True)
     separator = forms.ChoiceField(
         widget=forms.RadioSelect(renderer=HorizRadioRenderer),
-        choices=((',',","),(';',";")), initial=',')
+        choices=((',',","),(';',";"),('',"None")),
+        initial=',',
+        required=False)
 
 class TeamRegVerifyForm(forms.Form):
     who = forms.MultipleChoiceField(
