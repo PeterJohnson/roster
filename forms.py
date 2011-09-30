@@ -59,6 +59,29 @@ class PhoneListForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
         choices=[(x.id, x.name) for x in Team.objects.all()])
 
+class ContactListForm(forms.Form):
+    who = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=(
+            ('Parent', "Parent (Mother/Father)"),
+            ('Mentor', "Mentor"),
+            ('Student', "Student"),
+            ('Fan', "Fan"),
+        ),
+        initial=['Parent', 'Mentor', 'Student'])
+
+    status = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=PersonTeam.STATUS_CHOICES,
+        initial=['Active'])
+
+    team = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=[(x.id, x.name) for x in Team.objects.all()])
+
+    cc_on_email = forms.BooleanField(label="Include Parent CC",
+                                     required=False, initial=True)
+
 class EventEmailListForm(forms.Form):
     who = forms.MultipleChoiceField(
         widget=forms.CheckboxSelectMultiple,

@@ -1,0 +1,50 @@
+{% extends "roster/base.html" %}
+
+{% block content %}
+<div class="noprint">
+<form method="get" action=".">
+<table id="contact_list">
+    {{ form }}
+</table>
+<tr>
+    <td colspan="2"><input type="submit" value="Generate" /></td>
+</tr>
+</form>
+</div>
+
+{# results.query }}<br /><br />#}
+{% if final_results %}
+<br/>
+<table border="1">
+    <tr>
+	<td>Name</td>
+	{% for team in teams %}
+	<td>{{ team }}</td>
+	{% endfor %}
+	<td>Cell</td>
+	<td>Home</td>
+	<td>Email</td>
+	{% if cc_on_email %}
+	<td>CC Email</td>
+	{% endif %}
+    </tr>
+    {% for result in final_results %}
+    <tr>
+	<td>{{ result.name }}</td>
+	{% for role in result.roles %}
+	<td>{{ role }}</td>
+	{% endfor %}
+	<td>{{ result.cell }}</td>
+	<td>{{ result.home }}</td>
+	<td>{% for email in result.emails %}{{ email.email }}<br/>{% endfor %}</td>
+	{% if cc_on_email %}
+	<td>{% for email in result.cc_emails %}{{ email.email }}<br/>{% endfor %}</td>
+	{% endif %}
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No results.</p>
+{% endif %}
+
+{% endblock %}

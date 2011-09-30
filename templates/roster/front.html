@@ -2,11 +2,16 @@
 
 {% block content %}
 
-<p>Reports:</p>
+<p>Team Reports:</p>
 <ul>
     <li><a href="{% url email_list %}">Team Email List</a></li>
-    <li><a href="{% url event_email_list %}">Event Email List</a></li>
     <li><a href="{% url phone_list %}">Team Phone List</a></li>
+    <li><a href="{% url contact_list %}">Team Contact List</a></li>
+</ul>
+
+<p>Event Reports:</p>
+<ul>
+    <li><a href="{% url event_email_list %}">Event Email List</a></li>
 </ul>
 
 <p>Yearly Reports:</p>

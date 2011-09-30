@@ -76,6 +76,89 @@ def email_list(request):
                               context_instance=RequestContext(request))
 
 @login_required(login_url='/roster/login/')
+def contact_list(request):
+    """Team contact list (phone and email)."""
+
+    if request.method == 'GET' and request.GET:
+        form = ContactListForm(request.GET)
+        if form.is_valid():
+            who = set(form.data.getlist('who'))
+            include_parents = 'Parent' in who
+            who.discard('Parent')
+
+            status = form.data.getlist('status')
+            teams = sorted(form.data.getlist('team'))
+            team_index = dict((int(x[1]), x[0]) for x in enumerate(teams))
+            print team_index
+
+            people = PersonTeam.objects.filter(role__in=who,
+                    status__in=status, team__in=teams).values('person')
+
+            results = Person.objects.batch_select('phones')\
+                    .filter(id__in=people)
+
+            # Follow relationship to parents from students if enabled.
+            if include_parents:
+                parent_relationships = RelationshipType.objects.filter(parent=True).values('id')
+                students = PersonTeam.objects.filter(role='Student',
+                        status__in=form.data.getlist('status'),
+                        team__in=form.data.getlist('team')).values('person')
+                parents = Relationship.objects.filter(person_from__in=students,
+                        relationship__in=parent_relationships)
+                parents_map = dict(parents.values_list('person_to', 'person_from'))
+                results |= Person.objects.batch_select('phones')\
+                        .filter(id__in=parents_map.keys())
+
+            # Uniquify and get related info to avoid additional queries
+            results = results.distinct()
+
+            cc_on_email = 'cc_on_email' in form.data
+            final_results = []
+            for result in results:
+                name = result.render_normal()
+
+                roles = [""]*len(teams)
+                if include_parents and result.id in parents_map:
+                    for x in PersonTeam.objects.filter(person__id=parents_map[result.id],
+                            status__in=status, team__in=teams):
+                        roles[team_index[x.team.id]] = "%sParent" % \
+                            (x.status == 'Prospective' and "Prospective " or "",)
+
+                for x in PersonTeam.objects.filter(person=result,
+                        status__in=status, team__in=teams):
+                    roles[team_index[x.team.id]] = "%s%s" % \
+                         (x.status == 'Prospective' and "Prospective " or "",
+                          x.role)
+
+                cell = ""
+                home = ""
+                for phone in result.phones_all:
+                    if phone.location == 'Mobile':
+                        cell = phone.render_normal()
+                    elif phone.location == 'Home':
+                        home = phone.render_normal()
+
+                emails = [pe.email for pe in
+                        PersonEmail.objects.filter(primary=True, person=result)]
+                cc_emails = []
+                if cc_on_email:
+                    cc = Relationship.objects.filter(person_from=result,
+                            cc_on_email=True).values('person_to')
+                    cc_emails = sorted(set(pe.email for pe in
+                            PersonEmail.objects.filter(primary=True, person__in=cc)))
+
+                final_results.append(dict(name=name, roles=roles, cell=cell,
+                                          home=home, emails=emails,
+                                          cc_emails=cc_emails))
+
+            teams = Team.objects.filter(id__in=teams).order_by('id')
+    else:
+        form = ContactListForm()
+
+    return render_to_response("roster/contact_list.html", locals(),
+                              context_instance=RequestContext(request))
+
+@login_required(login_url='/roster/login/')
 def phone_list(request):
     """Team phone list."""
 
