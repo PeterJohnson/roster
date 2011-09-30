@@ -1,0 +1,48 @@
+{% extends "roster/base.html" %}
+
+{% block content %}
+<div class="noprint">
+<form method="get" action=".">
+<table id="tshirt_list">
+    {{ form }}
+</table>
+<tr>
+    <td colspan="2"><input type="submit" value="Generate" /></td>
+</tr>
+</form>
+</div>
+
+{# results.query }}<br /><br />#}
+{% if results %}
+<br/>
+<table border="1">
+    <tr>
+	<td>Size</td>
+	<td>Quantity</td>
+    </tr>
+    {% for tot in totals %}
+    <tr>
+	<td>{{ tot.shirt_size }}</td>
+	<td>{{ tot.shirt_size__count }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br/>
+<table border="1">
+    <tr>
+	<td>Name</td>
+	<td>T-Shirt Size</td>
+    </tr>
+    {% for result in results %}
+    <tr>
+	<td>{{ result }}</td>
+	<td>{{ result.get_shirt_size_display }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No results.</p>
+{% endif %}
+
+{% endblock %}

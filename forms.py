@@ -47,6 +47,9 @@ class ContactListForm(TeamReportForm):
     cc_on_email = forms.BooleanField(label="Include Parent CC",
                                      required=False, initial=True)
 
+class TshirtListForm(TeamReportForm):
+    pass
+
 class EventEmailListForm(forms.Form):
     who = forms.MultipleChoiceField(
         widget=forms.CheckboxSelectMultiple,

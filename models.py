@@ -204,8 +204,7 @@ class Person(models.Model):
 
     teams = models.ManyToManyField(Team, through='PersonTeam', blank=True)
 
-    shirt_size = models.CharField("Shirt Size", max_length=3, blank=True,
-                                  choices=(
+    SHIRT_SIZE_CHOICES=(
         ('YS', "Youth Small"),
         ('YM', "Youth Medium"),
         ('YL', "Youth Large"),
@@ -214,7 +213,9 @@ class Person(models.Model):
         ('L', "Large"),
         ('XL', "XL"),
         ('XXL', "XXL"),
-    ))
+        )
+    shirt_size = models.CharField("Shirt Size", max_length=3, blank=True,
+                                  choices=SHIRT_SIZE_CHOICES)
     medical = models.TextField("Medical Concerns", blank=True)
     medications = models.TextField("Medications", blank=True)
 

@@ -4,7 +4,7 @@ from django.utils.html import escape, linebreaks
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
-from django.db.models import Q
+from django.db.models import Q, Count
 
 from roster.models import *
 from roster.forms import *
@@ -226,6 +226,46 @@ def phone_list(request):
         form = PhoneListForm()
 
     return render_to_response("roster/phone_list.html", locals(),
+                              context_instance=RequestContext(request))
+
+@login_required(login_url='/roster/login/')
+def tshirt_list(request):
+    """Team T-shirt list."""
+
+    if request.method == 'GET' and request.GET:
+        form = TshirtListForm(request.GET)
+        if form.is_valid():
+            who = set(form.data.getlist('who'))
+            include_parents = 'Parent' in who
+            who.discard('Parent')
+
+            people = PersonTeam.objects.filter(role__in=who,
+                    status__in=form.data.getlist('status'),
+                    team__in=form.data.getlist('team')).values('person')
+
+            results = Person.objects.filter(id__in=people)
+
+            # Follow relationship to parents from students if enabled.
+            if include_parents:
+                parent_relationships = RelationshipType.objects.filter(parent=True).values('id')
+                students = PersonTeam.objects.filter(role='Student',
+                        status__in=form.data.getlist('status'),
+                        team__in=form.data.getlist('team')).values('person')
+                parents = Relationship.objects.filter(person_from__in=students,
+                        relationship__in=parent_relationships).values('person_to')
+                results |= Person.objects.filter(id__in=parents)
+
+            totals = []
+            shirt_sizes = dict(Person.SHIRT_SIZE_CHOICES)
+            shirt_sizes[""] = ""
+            for tot in results.values('shirt_size').annotate(Count('shirt_size')).order_by():
+                totals.append(dict(shirt_size=shirt_sizes[tot["shirt_size"]],
+                                   shirt_size__count=tot["shirt_size__count"]))
+
+    else:
+        form = TshirtListForm()
+
+    return render_to_response("roster/tshirt_list.html", locals(),
                               context_instance=RequestContext(request))
 
 @login_required(login_url='/roster/login/')
