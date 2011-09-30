@@ -15,7 +15,7 @@ class TeamReportForm(forms.Form):
     who = forms.MultipleChoiceField(
         widget=forms.CheckboxSelectMultiple,
         choices=(
-            ('Parent', "Parent (Mother/Father)"),
+            ('Parent', "Parent"),
             ('Mentor', "Mentor"),
             ('Student', "Student"),
             ('Fan', "Fan"),
