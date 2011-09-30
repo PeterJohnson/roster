@@ -255,12 +255,18 @@ def tshirt_list(request):
                         relationship__in=parent_relationships).values('person_to')
                 results |= Person.objects.filter(id__in=parents)
 
-            totals = []
-            shirt_sizes = dict(Person.SHIRT_SIZE_CHOICES)
-            shirt_sizes[""] = ""
+            totals_dict = {}
             for tot in results.values('shirt_size').annotate(Count('shirt_size')).order_by():
-                totals.append(dict(shirt_size=shirt_sizes[tot["shirt_size"]],
-                                   shirt_size__count=tot["shirt_size__count"]))
+                totals_dict[tot["shirt_size"]] = tot["shirt_size__count"]
+
+            totals = []
+            totals.append(dict(shirt_size="",
+                               shirt_size__count=totals_dict[""]))
+            for size_short, size_long in Person.SHIRT_SIZE_CHOICES:
+                if size_short not in totals_dict:
+                    continue
+                totals.append(dict(shirt_size=size_long,
+                                   shirt_size__count=totals_dict[size_short]))
 
     else:
         form = TshirtListForm()
