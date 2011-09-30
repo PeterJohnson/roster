@@ -11,7 +11,7 @@ class HorizRadioRenderer(forms.RadioSelect.renderer):
             """Outputs radios"""
             return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
 
-class EmailListForm(forms.Form):
+class TeamReportForm(forms.Form):
     who = forms.MultipleChoiceField(
         widget=forms.CheckboxSelectMultiple,
         choices=(
@@ -31,6 +31,7 @@ class EmailListForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
         choices=[(x.id, x.name) for x in Team.objects.all()])
 
+class EmailListForm(TeamReportForm):
     cc_on_email = forms.BooleanField(label="Include Parent CC",
                                      required=False, initial=True)
     separator = forms.ChoiceField(
@@ -39,46 +40,10 @@ class EmailListForm(forms.Form):
         initial=',',
         required=False)
 
-class PhoneListForm(forms.Form):
-    who = forms.MultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple,
-        choices=(
-            ('Parent', "Parent (Mother/Father)"),
-            ('Mentor', "Mentor"),
-            ('Student', "Student"),
-            ('Fan', "Fan"),
-        ),
-        initial=['Parent', 'Mentor', 'Student'])
+class PhoneListForm(TeamReportForm):
+    pass
 
-    status = forms.MultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple,
-        choices=PersonTeam.STATUS_CHOICES,
-        initial=['Active'])
-
-    team = forms.MultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple,
-        choices=[(x.id, x.name) for x in Team.objects.all()])
-
-class ContactListForm(forms.Form):
-    who = forms.MultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple,
-        choices=(
-            ('Parent', "Parent (Mother/Father)"),
-            ('Mentor', "Mentor"),
-            ('Student', "Student"),
-            ('Fan', "Fan"),
-        ),
-        initial=['Parent', 'Mentor', 'Student'])
-
-    status = forms.MultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple,
-        choices=PersonTeam.STATUS_CHOICES,
-        initial=['Active'])
-
-    team = forms.MultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple,
-        choices=[(x.id, x.name) for x in Team.objects.all()])
-
+class ContactListForm(TeamReportForm):
     cc_on_email = forms.BooleanField(label="Include Parent CC",
                                      required=False, initial=True)
 
