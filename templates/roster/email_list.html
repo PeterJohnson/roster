@@ -15,7 +15,7 @@
 {% if results %}
 {# results.query }}<br />#}<br />
 <textarea readonly="true" cols="50" rows="20">
-{% for result in results %}{{ result.person.render_normal }} &lt;{{ result.email.email }}&gt;{% if not forloop.last %}{{ separator }}
+{% for result in results %}{% if include_name %}{{ result.person.render_normal }} &lt;{% endif %}{{ result.email.email }}{% if include_name %}&gt;{% endif %}{% if not forloop.last %}{{ separator }}
 {% endif %}{% endfor %}
 </textarea>
 <p>Click text box, type Ctrl-A, Ctrl-C to copy to clipboard.</p>

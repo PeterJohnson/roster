@@ -34,6 +34,8 @@ class TeamReportForm(forms.Form):
 class EmailListForm(TeamReportForm):
     cc_on_email = forms.BooleanField(label="Include Parent CC",
                                      required=False, initial=True)
+    include_name = forms.BooleanField(label="Include Name",
+                                      required=False, initial=True)
     separator = forms.ChoiceField(
         widget=forms.RadioSelect(renderer=HorizRadioRenderer),
         choices=((',',","),(';',";"),('',"None")),
@@ -61,6 +63,8 @@ class EventEmailListForm(forms.Form):
         queryset=Event.objects.filter(calendar_post=True))
     cc_on_email = forms.BooleanField(label="Include Parent CC",
                                      required=False, initial=True)
+    include_name = forms.BooleanField(label="Include Name",
+                                      required=False, initial=True)
     separator = forms.ChoiceField(
         widget=forms.RadioSelect(renderer=HorizRadioRenderer),
         choices=((',',","),(';',";"),('',"None")),

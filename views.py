@@ -67,6 +67,7 @@ def email_list(request):
             # Uniquify and get related info to avoid additional queries
             results = results.select_related('person', 'email.email').distinct()
 
+            include_name = 'include_name' in form.data
             separator = form.data['separator']
 
     else:
@@ -297,6 +298,7 @@ def event_email_list(request):
             # Uniquify and get related info to avoid additional queries
             results = results.select_related('person', 'email.email').distinct()
 
+            include_name = 'include_name' in form.data
             separator = form.data['separator']
     else:
         form = EventEmailListForm()
