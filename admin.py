@@ -178,7 +178,7 @@ class PersonAdmin(admin.ModelAdmin):
                            ('school', 'grad_year'),
                            'company',
                            'shirt_size',
-                           'badge']}),
+                           'photo']}),
         ('Medical information', {'fields': ['medical', 'medications']}),
         ('Misc information', {'fields': ['prospective_source', 'comments']}),
     ]

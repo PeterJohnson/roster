@@ -1,6 +1,7 @@
 from django.db import models, IntegrityError
 from django.contrib.localflavor.us.models import *
 from batch_select.models import BatchManager
+from stdimage import StdImageField
 
 # Base models
 class Organization(models.Model):
@@ -199,8 +200,7 @@ class Person(models.Model):
     school = models.ForeignKey(School, null=True, blank=True)
     grad_year = models.IntegerField("Graduation year", null=True, blank=True)
 
-    badge = models.IntegerField("Badge Number", unique=True, null=True,
-                                blank=True)
+    photo = StdImageField(upload_to='badge', blank=True)
 
     teams = models.ManyToManyField(Team, through='PersonTeam', blank=True)
 

@@ -5,6 +5,8 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
 from django.db.models import Q, Count
+from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
 
 from roster.models import *
 from roster.forms import *
@@ -22,6 +24,7 @@ pdfmetrics.registerFont(TTFont('Calibri', 'calibri.ttf'))
 pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
 pdfmetrics.registerFont(TTFont('Calibri-Italic', 'calibrii.ttf'))
 
+import csv
 
 team_color1 = (55.0/255.0, 88.0/255.0, 150.0/255.0)
 team_color2 = (236.0/255.0, 108.0/255.0, 29.0/255.0)
@@ -686,3 +689,112 @@ def team_reg_verify(request):
     # Generate the document
     doc.build(elements)
     return response
+
+@login_required(login_url='/roster/login/')
+def signin_person_list(request):
+    """Basic easy to parse list of people for signin application."""
+
+    parent_relationships = RelationshipType.objects.filter(parent=True).values_list('id', flat=True)
+
+    people = PersonTeam.objects.filter(status='Active').values('person')
+    results = Person.objects.all()#filter(id__in=people)
+    #results = results.distinct()
+
+    response = HttpResponse(mimetype='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=signin_person_list.csv'
+
+    writer = csv.writer(response)
+    writer.writerow(['id', 'name', 'student', 'photo', 'photo size'])
+    for person in results:
+        name = person.render_normal()
+
+        # Classify person as a student or an adult: this is somewhat
+        # complicated as a person can be on multiple teams, be an alumnus,
+        # or even be a student on one team and a mentor on another.
+        # The algorithm used here uses the following priority:
+        # 1) non-alumnus student role on any team => student
+        # 2) graduation year in future => student
+        # 3) graduation year in past => adult
+        # 4) age > 20 => adult
+        # 5) any non-student role on any team => adult
+        # 6) any parent relationships => student
+        # 7) assume adult
+        student = None
+
+        from datetime import date
+        today = date.today()
+        # graduation year
+        if (student is None and person.grad_year and
+                person.grad_year > 100 and person.grad_year > today.year):
+            student = True
+        if (student is None and person.grad_year and
+                person.grad_year > 100 and person.grad_year < today.year):
+            student = False
+        # age
+        if (student is None and person.birth_year and
+                person.birth_year > 100 and
+                (today.year - person.birth_year) > 20):
+            student = False
+
+        # roles
+        for x in PersonTeam.objects.filter(person=person):
+            if student is None and x.role != 'Student':
+                student = False
+            if x.role == 'Student' and x.status != 'Alumnus':
+                student = True
+
+        # relationships
+        if student is None:
+            if Relationship.objects.filter(person_from=person,
+                    relationship__in=parent_relationships):
+                student = True
+
+        if student is None:
+            student = False
+
+        photourl = ''
+        photosize = 0
+        if person.photo:
+            photourl = person.photo.url
+            photosize = person.photo.file.size
+        writer.writerow([person.id, name, student, photourl, photosize])
+
+    return response
+
+@login_required(login_url='/roster/login/')
+@csrf_exempt
+@transaction.commit_on_success
+def time_record_bulk_add(request):
+    """Bulk time record entry for signin application."""
+
+    from datetime import datetime
+    def fromiso(t):
+        try:
+            return datetime.strptime(t, "%Y-%m-%d %H:%M:%S.%f")
+        except:
+            return datetime.strptime(t, "%Y-%m-%d %H:%M:%S")
+
+    errs = []
+    ok = []
+    for count, row in enumerate(csv.DictReader(request)):
+        try:
+            person = Person.objects.get(id=int(row["person"]))
+            event = row.get("event", None)
+            if event:
+                event = Event.objects.get(id=int(event))
+            else:
+                event = None
+            record = TimeRecord(
+                    person=person,
+                    event=event,
+                    clock_in=fromiso(row["clock_in"]),
+                    clock_out=fromiso(row["clock_out"]),
+                    hours=float(row["hours"]),
+                    recorded=fromiso(row["recorded"]),
+                    )
+            record.save()
+            ok.append(count)
+        except Exception as e:
+            errs.append("%d (%s): %s" % (count, row.get("person", ""), str(e)))
+
+    return HttpResponse(str(ok)+"\n"+"\n".join(errs), content_type="text/plain")
