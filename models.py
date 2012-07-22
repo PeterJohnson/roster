@@ -239,6 +239,53 @@ class Person(models.Model):
             return self.firstname
     get_firstname.short_description = 'First Name'
 
+    def is_student(self, parent_relationships=None):
+        # Classify person as a student or an adult: this is somewhat
+        # complicated as a person can be on multiple teams, be an alumnus,
+        # or even be a student on one team and a mentor on another.
+        # The algorithm used here uses the following priority:
+        # 1) non-alumnus student role on any team => student
+        # 2) graduation year in future => student
+        # 3) graduation year in past => adult
+        # 4) age > 20 => adult
+        # 5) any non-student role on any team => adult
+        # 6) any parent relationships => student
+        if parent_relationships is None:
+            parent_relationships = RelationshipType.objects.filter(parent=True)\
+                    .values_list('id', flat=True)
+
+        student = None
+
+        from datetime import date
+        today = date.today()
+        # graduation year
+        if (student is None and self.grad_year and
+                self.grad_year > 100 and self.grad_year > today.year):
+            student = True
+        if (student is None and self.grad_year and
+                self.grad_year > 100 and self.grad_year < today.year):
+            student = False
+        # age
+        if (student is None and self.birth_year and
+                self.birth_year > 100 and
+                (today.year - self.birth_year) > 20):
+            student = False
+
+        # roles
+        for x in PersonTeam.objects.filter(person=self):
+            if student is None and x.role != 'Student':
+                student = False
+            if x.role == 'Student' and x.status != 'Alumnus':
+                student = True
+
+        # relationships
+        if student is None:
+            if Relationship.objects.filter(person_from=self,
+                    relationship__in=parent_relationships):
+                student = True
+
+        return student
+
     def active_roles(self):
         results = PersonTeam.objects.filter(person=self,
                 status__in=('Active', 'Prospective'))

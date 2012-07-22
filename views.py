@@ -707,48 +707,9 @@ def signin_person_list(request):
     writer.writerow(['id', 'name', 'student', 'photo', 'photo size'])
     for person in results:
         name = person.render_normal()
+        student = person.is_student(parent_relationships)
 
-        # Classify person as a student or an adult: this is somewhat
-        # complicated as a person can be on multiple teams, be an alumnus,
-        # or even be a student on one team and a mentor on another.
-        # The algorithm used here uses the following priority:
-        # 1) non-alumnus student role on any team => student
-        # 2) graduation year in future => student
-        # 3) graduation year in past => adult
-        # 4) age > 20 => adult
-        # 5) any non-student role on any team => adult
-        # 6) any parent relationships => student
-        # 7) assume adult
-        student = None
-
-        from datetime import date
-        today = date.today()
-        # graduation year
-        if (student is None and person.grad_year and
-                person.grad_year > 100 and person.grad_year > today.year):
-            student = True
-        if (student is None and person.grad_year and
-                person.grad_year > 100 and person.grad_year < today.year):
-            student = False
-        # age
-        if (student is None and person.birth_year and
-                person.birth_year > 100 and
-                (today.year - person.birth_year) > 20):
-            student = False
-
-        # roles
-        for x in PersonTeam.objects.filter(person=person):
-            if student is None and x.role != 'Student':
-                student = False
-            if x.role == 'Student' and x.status != 'Alumnus':
-                student = True
-
-        # relationships
-        if student is None:
-            if Relationship.objects.filter(person_from=person,
-                    relationship__in=parent_relationships):
-                student = True
-
+        # Default to adult if we can't figure out if this is a student or not.
         if student is None:
             student = False
 
