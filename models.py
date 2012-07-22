@@ -50,18 +50,6 @@ class Team(models.Model):
     class Meta:
         ordering = ['name']
 
-class Position(models.Model):
-    title = models.CharField(max_length=50, unique=True)
-    steering = models.BooleanField(default=False)
-
-    def clean(self):
-        for field in self._meta.fields:
-            if isinstance(field, (models.CharField, models.TextField)):
-                setattr(self, field.name, getattr(self, field.name).strip())
-
-    class Meta:
-        ordering = ['title']
-
 class School(models.Model):
     name = models.CharField("Name", max_length=20, unique=True)
     longname = models.CharField("Long name", max_length=50)
@@ -228,7 +216,7 @@ class Person(models.Model):
 
     comments = models.TextField("Comments", blank=True)
 
-    position = models.ForeignKey(Position, null=True, blank=True)
+    position = models.CharField(max_length=50, blank=True)
 
     emails = models.ManyToManyField(Email, through='PersonEmail', blank=True)
     addresses = models.ManyToManyField(Address, blank=True)

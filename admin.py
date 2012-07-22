@@ -32,12 +32,6 @@ class PersonInline(admin.TabularInline):
     model = Person
     extra = 1
 
-class PositionAdmin(admin.ModelAdmin):
-    list_display = ['title', 'steering']
-    list_filter = ['steering']
-    #inlines = [MemberInline]
-    #fieldsets = [(None, {'fields': ['title', 'steering', 'members']})]
-
 class SchoolAdmin(admin.ModelAdmin):
     list_display = ['__unicode__', 'name', 'type']
 
@@ -178,7 +172,7 @@ class PersonAdmin(admin.ModelAdmin):
                            ('school', 'grad_year'),
                            'company',
                            'shirt_size',
-                           'photo']}),
+                           'photo', 'position']}),
         ('Medical information', {'fields': ['medical', 'medications']}),
         ('Misc information', {'fields': ['prospective_source', 'comments']}),
     ]
@@ -237,7 +231,6 @@ class LogEntryAdmin(admin.ModelAdmin):
 admin.site.register(Organization)
 admin.site.register(Program)
 admin.site.register(Team, TeamAdmin)
-admin.site.register(Position, PositionAdmin)
 admin.site.register(School, SchoolAdmin)
 admin.site.register(Company)
 admin.site.register(Email, EmailAdmin)
