@@ -1,0 +1,14 @@
+{% extends "roster/base.html" %}
+
+{% block content %}
+<div class="noprint">
+<form method="get" action=".">
+<table id="badges">
+    {{ form }}
+</table>
+<tr>
+    <td colspan="2"><input type="submit" value="Generate" /></td>
+</tr>
+</form>
+</div>
+{% endblock %}

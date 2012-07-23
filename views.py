@@ -8,6 +8,10 @@ from django.db.models import Q, Count
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 
+from settings import MEDIA_ROOT
+
+from PIL import Image
+
 from roster.models import *
 from roster.forms import *
 
@@ -17,6 +21,8 @@ from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, BaseDocTemplate, SimpleDocTemplate, Table, TableStyle, PageBreak, ActionFlowable, Frame, PageTemplate
 from reportlab.platypus.flowables import Flowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.utils import ImageReader
+from reportlab.graphics.barcode import code39
 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -24,6 +30,7 @@ pdfmetrics.registerFont(TTFont('Calibri', 'calibri.ttf'))
 pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
 pdfmetrics.registerFont(TTFont('Calibri-Italic', 'calibrii.ttf'))
 
+import os
 import csv
 
 team_color1 = (55.0/255.0, 88.0/255.0, 150.0/255.0)
@@ -759,3 +766,235 @@ def time_record_bulk_add(request):
             errs.append("%d (%s): %s" % (count, row.get("person", ""), str(e)))
 
     return HttpResponse(str(ok)+"\n"+"\n".join(errs), content_type="text/plain")
+
+def roundRectPath(path, x, y, width, height, radius):
+    """Draws a rectangle with rounded corners. The corners are
+    approximately quadrants of a circle, with the given radius."""
+    #use a precomputed set of factors for the bezier approximation
+    #to a circle. There are six relevant points on the x axis and y axis.
+    #sketch them and it should all make sense!
+    t = 0.4472 * radius
+
+    x0 = x
+    x1 = x0 + t
+    x2 = x0 + radius
+    x3 = x0 + width - radius
+    x4 = x0 + width - t
+    x5 = x0 + width
+
+    y0 = y
+    y1 = y0 + t
+    y2 = y0 + radius
+    y3 = y0 + height - radius
+    y4 = y0 + height - t
+    y5 = y0 + height
+
+    path.moveTo(x2, y0)
+    path.lineTo(x3, y0) # bottom row
+    path.curveTo(x4, y0, x5, y1, x5, y2) # bottom right
+
+    path.lineTo(x5, y3) # right edge
+    path.curveTo(x5, y4, x4, y5, x3, y5) # top right
+
+    path.lineTo(x2, y5) # top row
+    path.curveTo(x1, y5, x0, y4, x0, y3) # top left
+
+    path.lineTo(x0, y2) # left edge
+    path.curveTo(x0, y1, x1, y0, x2, y0) # bottom left
+
+    path.close() #close off, although it should be where it started anyway
+
+class Badge(Flowable):
+    """A badge flowable."""
+    # badge dimensions
+    width = 3.5*inch
+    height = 2.25*inch
+
+    # border thickness
+    border_size = 0.125*inch
+
+    # logo location and size
+    logo = 1
+    logo_width = 0.5*inch
+    logo_height = 0.75*inch
+    logo_x = width - logo_width - 0.25*inch
+    logo_y = height - logo_height - 0.125*inch
+
+    # photo location and size
+    photo_width = 1.0*inch
+    photo_height = 1.25*inch
+    photo_x = 0.25*inch
+    photo_y = height - photo_height - 0.25*inch
+    photo_corner = 0.125*inch  # rounded corner radius
+
+    # name location and size
+    name_font = 'Calibri-Bold'
+    name_fontsize = 20
+    name_x = 0.25*inch
+    name_y = 0.5*inch
+
+    # position location and size
+    position_font = 'Calibri'
+    position_fontsize = 14
+    position_x = 0.25*inch
+    position_y = 0.25*inch
+
+    # barcode location and size
+    barcode_x = 1.75*inch
+    barcode_y = 1*inch
+
+    def __init__(self, person, parent_relationships=None):
+        self.person = person
+        if parent_relationships is None:
+            parent_relationships = RelationshipType.objects.filter(parent=True).values_list('id', flat=True)
+        self.student = self.person.is_student(parent_relationships)
+
+    def wrap(self, *args):
+        return (0, self.height)
+
+    def draw(self):
+        canvas = self.canv
+        canvas.saveState()
+        canvas.setLineWidth(1)
+        canvas.setStrokeColor(colors.black)
+        canvas.setFillColor(colors.black)
+
+        # Badge outline / border
+        canvas.saveState()
+        canvas.setFillColor(self.student and team_color1 or team_color2)
+        canvas.rect(0, 0, self.width, self.height, fill=1)
+        canvas.setFillColor(colors.white)
+        canvas.rect(self.border_size, self.border_size,
+                self.width-self.border_size*2, self.height-self.border_size*2,
+                stroke=0, fill=1)
+        canvas.restoreState()
+
+        # Team logo
+        if self.logo:
+            canvas.drawImage(os.path.join(MEDIA_ROOT, "logo.jpeg"),
+                    self.logo_x, self.logo_y, self.logo_width, self.logo_height,
+                    preserveAspectRatio=True)
+
+        # Photo
+        if self.person.photo:
+            # load image
+            photopath = os.path.join(MEDIA_ROOT, self.person.photo.name)
+            img = Image.open(photopath)
+
+            # crop image to aspect ratio
+            imgw, imgh = img.size
+            newimgw, newimgh = imgw, imgh
+            rw = int(imgh * self.photo_width / self.photo_height)
+            if rw <= imgw:
+                newimgw = rw
+            else:
+                newimgh = int(imgw * self.photo_height / self.photo_width)
+            left = (imgw-newimgw)/2
+            top = (imgh-newimgh)/2
+            finalimg = img.crop((left, top, left+newimgw, top+newimgh))
+            finalimg.load()
+
+            # round corners by using a clip path
+            canvas.saveState()
+            p = canvas.beginPath()
+            roundRectPath(p, self.photo_x, self.photo_y, self.photo_width,
+                    self.photo_height, self.photo_corner)
+            canvas.clipPath(p, stroke=0)
+            # draw image
+            canvas.drawImage(ImageReader(finalimg), self.photo_x, self.photo_y,
+                    self.photo_width, self.photo_height,
+                    preserveAspectRatio=True)
+            canvas.restoreState()
+        else:
+            canvas.roundRect(self.photo_x, self.photo_y, self.photo_width,
+                    self.photo_height, self.photo_corner, stroke=1)
+
+        # Name
+        canvas.saveState()
+        canvas.setFont(self.name_font, self.name_fontsize)
+        canvas.drawString(self.name_x, self.name_y, self.person.render_normal())
+        canvas.restoreState()
+
+        # Position
+        position = str(self.person.position)
+        if not position:
+            if self.student:
+                position = "Student"
+            else:
+                position = "Mentor"
+        canvas.saveState()
+        canvas.setFont(self.position_font, self.position_fontsize)
+        canvas.drawString(self.position_x, self.position_y, position)
+        canvas.restoreState()
+
+        # Barcode (ID)
+        idstr = "%05d" % self.person.id
+        canvas.saveState()
+        barcode = code39.Standard39(idstr, humanReadable=1, checksum=0)
+        canvas.setFillColor(colors.white)
+        # increase bounding box a bit to ensure we include the human readable
+        # part as well
+        canvas.rect(self.barcode_x, self.barcode_y-0.1875*inch, barcode.width,
+                barcode.height+0.25*inch, stroke=1, fill=1)
+        canvas.setFillColor(colors.black)
+        barcode.drawOn(canvas, self.barcode_x, self.barcode_y)
+        canvas.restoreState()
+
+        canvas.restoreState()
+
+class BadgesDocTemplate(BaseDocTemplate):
+    _invalidInitArgs = ('pageTemplates')
+
+    def afterInit(self):
+        frame = Frame(self.leftMargin, self.bottomMargin, self.width, self.height, id='normal')
+        self.addPageTemplates([PageTemplate(id='Page',frames=frame,pagesize=self.pagesize)])
+
+@login_required(login_url='/roster/login/')
+def badges(request):
+    """Badge generation."""
+    if request.method != 'GET' or not request.GET:
+        form = BadgesForm()
+        return render_to_response("roster/badges.html", locals(),
+                                  context_instance=RequestContext(request))
+
+    form = BadgesForm(request.GET)
+    if not form.is_valid():
+        return render_to_response("roster/badges.html", locals(),
+                                  context_instance=RequestContext(request))
+
+    # configure PDF output
+    response = HttpResponse(mimetype='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename=Badges.pdf'
+    doc = BadgesDocTemplate(response,
+            pagesize=letter,
+            allowSplitting=0,
+            leftMargin=0.5*inch,
+            rightMargin=0.5*inch,
+            topMargin=0.75*inch,
+            bottomMargin=0.75*inch,
+            title="Badges",
+            author="Beach Cities Robotics")
+
+    # container for the 'Flowable' objects
+    elements = []
+
+    styles = getSampleStyleSheet()
+    normal_para_style = styles['Normal']
+
+    parent_relationships = RelationshipType.objects.filter(parent=True).values_list('id', flat=True)
+
+    people = PersonTeam.objects.filter(
+            role__in=form.data.getlist('who'),
+            status='Active',
+            team__in=form.data.getlist('team')).values('person')
+
+    people = Person.objects.filter(id__in=people)
+
+    for person in people:
+        elements.append(Badge(person, parent_relationships))
+        elements.append(Paragraph("", normal_para_style))
+
+    # Generate the document
+    doc.build(elements)
+    return response
+

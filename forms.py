@@ -94,3 +94,16 @@ class ClassTeamListForm(forms.Form):
     class_begin = forms.IntegerField(label="Beginning class")
     class_end = forms.IntegerField(label="Ending class")
 
+class BadgesForm(forms.Form):
+    who = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=(
+            ('Mentor', "Mentor"),
+            ('Student', "Student"),
+        ),
+        initial=['Mentor', 'Student'])
+
+    team = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=[(x.id, x.name) for x in Team.objects.all()])
+
