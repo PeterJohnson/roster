@@ -5,10 +5,36 @@
 <form method="get" action=".">
 <table id="badges">
     {{ form }}
+<tr>
+    <td colspan="2"><input type="submit" value="Search" /></td>
+</tr>
 </table>
+</form>
+{% if people %}
+<script language="JavaScript">
+function toggle(source) {
+  checkboxes = document.getElementsByName('ids');
+  for(var i in checkboxes)
+    checkboxes[i].checked = source.checked;
+}
+</script>
+<form method="get" action=".">
+<table id="badgeids">
+<tr>
+    <td><input id="toggleall" type="checkbox" onClick="toggle(this)" /></td>
+    <td><label for="toggleall"><b>Toggle All</b></label></td>
+</tr>
+{% for person in people %}
+<tr>
+    <td><input id="{{ person.id }}" type="checkbox" name="ids" value="{{ person.id }}" /></td>
+    <td><label for="{{ person.id }}">{{ person.render_normal }}</label></td>
+</tr>
+{% endfor %}
 <tr>
     <td colspan="2"><input type="submit" value="Generate" /></td>
 </tr>
+</table>
 </form>
+{% endif %}
 </div>
 {% endblock %}
