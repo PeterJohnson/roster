@@ -157,7 +157,7 @@ class PersonAdminForm(forms.ModelForm):
 class PersonAdmin(admin.ModelAdmin):
     form = PersonAdminForm
     list_display = ['__unicode__', 'lastname', 'get_firstname', 'active_roles']
-    list_filter = ['teams', RoleListFilter, StatusListFilter, 'gender']
+    list_filter = ['teams', RoleListFilter, StatusListFilter, 'gender', 'school']
     search_fields = ['^firstname', '^lastname', '^nickname']
     inlines = [PersonTeamInline,
                PersonEmailInline,
@@ -172,7 +172,7 @@ class PersonAdmin(admin.ModelAdmin):
                            ('school', 'grad_year'),
                            'company',
                            'shirt_size',
-                           'photo', 'position']}),
+                           'legacy_badge', 'photo', 'position']}),
         ('Medical information', {'fields': ['medical', 'medications']}),
         ('Misc information', {'fields': ['prospective_source', 'comments']}),
     ]

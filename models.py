@@ -188,6 +188,8 @@ class Person(models.Model):
     school = models.ForeignKey(School, null=True, blank=True)
     grad_year = models.IntegerField("Graduation year", null=True, blank=True)
 
+    legacy_badge = models.IntegerField("Legacy badge", null=True, blank=True)
+
     photo = StdImageField(upload_to='badge', blank=True)
 
     teams = models.ManyToManyField(Team, through='PersonTeam', blank=True)
@@ -231,6 +233,12 @@ class Person(models.Model):
 
     def render_normal(self):
         return self.__unicode__()
+
+    def get_badge(self):
+        if self.legacy_badge:
+            return self.legacy_badge
+        else:
+            return self.id+2000
 
     def get_firstname(self):
         if self.nickname:

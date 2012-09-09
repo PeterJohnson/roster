@@ -710,7 +710,7 @@ def signin_person_list(request):
     response['Content-Disposition'] = 'attachment; filename=signin_person_list.csv'
 
     writer = csv.writer(response)
-    writer.writerow(['id', 'name', 'student', 'photo', 'photo size'])
+    writer.writerow(['id', 'name', 'student', 'photo', 'photo size', 'badge'])
     for person in results:
         name = person.render_normal()
         student = person.is_student(parent_relationships)
@@ -724,7 +724,7 @@ def signin_person_list(request):
         if person.photo:
             photourl = person.photo.url
             photosize = person.photo.file.size
-        writer.writerow([person.id, name, student, photourl, photosize])
+        writer.writerow([person.id, name, student, photourl, photosize, person.get_badge()])
 
     return response
 
@@ -937,7 +937,7 @@ class Badge(Flowable):
         p.drawOn(canvas, self.position_x, self.position_y)
 
         # Barcode
-        idstr = "B%05d" % self.person.id
+        idstr = "B%05d" % self.person.get_badge()
         canvas.saveState()
         barcode = code39.Standard39(idstr, humanReadable=0, checksum=1)
         canvas.setFillColor(colors.black)
@@ -945,7 +945,7 @@ class Badge(Flowable):
         canvas.restoreState()
 
         # ID
-        idstr = "%d" % self.person.id
+        idstr = "%d" % self.person.get_badge()
         canvas.saveState()
         canvas.setFont(self.id_font, self.id_fontsize)
         canvas.drawString(self.barcode_x + barcode.lquiet,
