@@ -3,6 +3,22 @@
 #team_reg_verify_list ul {list-style-type:none; margin-left: 0; padding-left: 1em; text-indent: -1em; }
 #class_team_list ul {list-style-type:none; margin-left: 0; padding-left: 1em; text-indent: -1em; }
 
+#reg_form ul {list-style-type:none; margin: 0 0 0 0; padding: 0 0 0 0; text-indent: 0; }
+#reg_form td {padding-top: 2px;}
+#reg_form .error {border-style: solid; border-width: 2px; border-color: red; padding: 2px 1px 3px 1px;}
+#reg_form #medical th {text-align:left;}
+#reg_form #medical textarea {height:3em;}
+#reg_form #id_phone-work_ext {width:4em;}
+#reg_form #id_phone-other_ext {width:4em;}
+#reg_form #id_basic-birth_month {width:2em; text-align: center;}
+#reg_form #id_basic-birth_day {width:2em; text-align: center;}
+#reg_form #id_basic-birth_year {width:3em; text-align: center;}
+#reg_form #id_basic-company_other {width:18em;}
+#reg_form #id_guardian1-company_other {width:18em;}
+#reg_form #id_guardian2-company_other {width:18em;}
+
+span.required_field {color: red;}
+
 @media all
 {
     .page-break { display:none; }

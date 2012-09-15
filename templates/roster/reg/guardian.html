@@ -1,0 +1,85 @@
+{% extends "roster/reg/base.html" %}
+
+{% block script %}
+<script>
+$("#id_guardian2-only_one_guardian").click(function () {
+    if ($('#id_guardian2-only_one_guardian').is(':checked')) {
+	$("#data").hide();
+    } else {
+	$("#data").show();
+    }
+});
+$(document).ready(function () {
+    if ($('#id_guardian2-only_one_guardian').is(':checked')) {
+	$("#data").hide();
+    } else {
+	$("#data").show();
+    }
+});
+</script>
+{% endblock %}
+
+{% block form %}
+<table>
+{% if wizard.form.only_one_guardian %}
+    <tr>
+	<td><span{% if wizard.form.only_one_guardian.errors %} class="error"{% endif %}>{{ wizard.form.only_one_guardian }}{{ wizard.form.only_one_guardian.label_tag }}</span></td>
+	<td>{{ wizard.form.only_one_guardian.errors }}</td>
+    </tr>
+{% endif %}
+</table>
+<table id="data">
+    <tr>
+	<th>{{ wizard.form.relationship.label_tag }}:</th>
+	<td><span{% if wizard.form.relationship.errors %} class="error"{% endif %}>{{ wizard.form.relationship }}</span></td>
+	<td><span class="required_field">*</span></td>
+	<td>{{ wizard.form.relationship.errors }}</td>
+    </tr>
+    <tr>
+	<th>{{ wizard.form.firstname.label_tag }}:</th>
+	<td><span{% if wizard.form.firstname.errors %} class="error"{% endif %}>{{ wizard.form.firstname }}</span></td>
+	<td><span class="required_field">*</span></td>
+	<td>{{ wizard.form.firstname.errors }}</td>
+    </tr>
+    <tr>
+	<th>{{ wizard.form.lastname.label_tag }}:</th>
+	<td><span{% if wizard.form.lastname.errors %} class="error"{% endif %}>{{ wizard.form.lastname }}</span></td>
+	<td><span class="required_field">*</span></td>
+	<td>{{ wizard.form.lastname.errors }}</td>
+    </tr>
+    <tr>
+	<th>{{ wizard.form.suffix.label_tag }}:</th>
+	<td><span{% if wizard.form.suffix.errors %} class="error"{% endif %}>{{ wizard.form.suffix }}</span></td>
+	<td>{% if wizard.form.suffix.wizard.form.suffix.required %}<span class="required_wizard.form.suffix">*</span>{% endif %}</td>
+	<td>{{ wizard.form.suffix.errors }}</td>
+    </tr>
+    <tr>
+	<th>{{ wizard.form.nickname.label_tag }}:</th>
+	<td><span{% if wizard.form.nickname.errors %} class="error"{% endif %}>{{ wizard.form.nickname }}</span></td>
+	<td>{% if wizard.form.nickname.wizard.form.nickname.required %}<span class="required_wizard.form.nickname">*</span>{% endif %}</td>
+	<td>{{ wizard.form.nickname.errors }}</td>
+    </tr>
+    <tr>
+	<th>{{ wizard.form.gender.label_tag }}:</th>
+	<td{% if wizard.form.gender.errors %} class="error"{% endif %}>{{ wizard.form.gender }}</td>
+	<td><span class="required_field">*</span></td>
+	<td>{{ wizard.form.gender.errors }}</td>
+    </tr>
+{% if wizard.form.company %}
+    <tr>
+	<th>{{ wizard.form.company.label_tag }}:</th>
+	<td><span{% if wizard.form.company.errors %} class="error"{% endif %}>{{ wizard.form.company }}</span></td>
+	<td><span class="required_field">*</span></td>
+	<td>{{ wizard.form.company.errors }}</td>
+    </tr>
+{% endif %}
+{% if wizard.form.company_other %}
+    <tr>
+	<th>{{ wizard.form.company_other.label_tag }}:</th>
+	<td><span{% if wizard.form.company_other.errors %} class="error"{% endif %}>{{ wizard.form.company_other }}</span></td>
+	<td></td>
+	<td>{{ wizard.form.company_other.errors }}</td>
+    </tr>
+{% endif %}
+</table>
+{% endblock %}

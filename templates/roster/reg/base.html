@@ -1,0 +1,31 @@
+{% extends "roster/base.html" %}
+
+{% block content %}
+<h3>{{ description }}</h3>
+<form action="" method="post" id="reg_form">{% csrf_token %}
+{{ wizard.management_form }}
+{% block form %}
+<table>
+{% if wizard.form.forms %}
+    {{ wizard.form.management_form }}
+    {% for form in wizard.form.forms %}
+        {{ form.as_table }}
+    {% endfor %}
+{% else %}
+{% for field in wizard.form %}
+<tr>
+    <th>{{ field.label_tag }}</th>
+    <td><span{% if field.errors %} class="error"{% endif %}>{{ field }}</span></td>
+    <td>{% if field.field.required %}<span class="required_field">*</span>{% endif %}</td>
+    <td>{{ field.errors }}</td>
+</tr>
+{% endfor %}
+{% endif %}
+</table>
+{% endblock %}
+{% if wizard.form.non_field_errors %}
+<table><tr><td class="error">{{ wizard.form.non_field_errors }}</td></tr></table>
+{% endif %}
+<input type="submit" value="Next"/>
+</form>
+{% endblock %}

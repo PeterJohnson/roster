@@ -1,0 +1,29 @@
+{% extends "roster/reg/base.html" %}
+
+{% block form %}
+<table>
+    <thead><tr><th>Person</th><th>E-mail</th><th>CC on email?</th><th></th></tr></thead>
+    <tr>
+	<td>{{ wizard.form.initial.person }}</td>
+	<td><span{% if wizard.form.email.errors %} class="error"{% endif %}>{{ wizard.form.email }}</span></td>
+	<td></td>
+	<td>{{ wizard.form.email.errors }}</td>
+    </tr>
+{% if wizard.form.initial.guardian1 %}
+    <tr>
+	<td>{{ wizard.form.initial.guardian1 }}</td>
+	<td><span{% if wizard.form.guardian1_email.errors %} class="error"{% endif %}>{{ wizard.form.guardian1_email }}</span></td>
+	<td align="center">{{ wizard.form.guardian1_cc }}</td>
+	<td>{{ wizard.form.guardian1_email.errors }}</td>
+    </tr>
+{% endif %}
+{% if wizard.form.initial.guardian2 %}
+    <tr>
+	<td>{{ wizard.form.initial.guardian2 }}</td>
+	<td><span{% if wizard.form.guardian2_email.errors %} class="error"{% endif %}>{{ wizard.form.guardian2_email }}</span></td>
+	<td align="center">{{ wizard.form.guardian2_cc }}</td>
+	<td>{{ wizard.form.guardian2_email.errors }}</td>
+    </tr>
+{% endif %}
+</table>
+{% endblock %}

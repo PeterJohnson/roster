@@ -7,6 +7,7 @@ from django.template import RequestContext
 from django.db.models import Q, Count
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
+from django.contrib.formtools.wizard.views import SessionWizardView
 
 from settings import MEDIA_ROOT
 
@@ -363,15 +364,17 @@ class Checkbox(Flowable):
             canvas.line(0, self.size, self.size, 0)
 
 class StartPerson(ActionFlowable):
-    def __init__(self, firstname, lastname, suffix, adult):
-        ActionFlowable.__init__(self, ('startPerson', firstname, lastname,
-                                       suffix, adult))
+    def __init__(self, id, firstname, lastname, suffix, adult, team):
+        ActionFlowable.__init__(self, ('startPerson', id, firstname,
+            lastname, suffix, adult, team))
 
 class RegVerifyDocTemplate(BaseDocTemplate):
     _invalidInitArgs = ('pageTemplates')
 
     def afterInit(self):
         self.name = None
+        self.id = None
+        self.team = None
         self.adult = False
 
         frame = Frame(self.leftMargin, self.bottomMargin, self.width, self.height, id='normal')
@@ -415,12 +418,12 @@ class RegVerifyDocTemplate(BaseDocTemplate):
         canv.setFont("Calibri", 8)
         canv.setLineWidth(0.5)
         for r, c, sw, vw, s, v in \
-                [(0, 0, 0.75, 0.5, "Info Logged:", None),
+                [(0, 0, 0.75, 0.5, "Id:", "%d" % self.id),
                  (1, 0, 0.75, 0.5, "Printed On:",
                   self.today.strftime("%b %-d, %Y")),
                  (0, 1, 0.75, 0.5, "Cash/Check #", None),
                  (1, 1, 0.75, 0.5, "Amount:", None),
-                 (0, 2, 0.75, 0.5, "Program:", None),
+                 (0, 2, 0.75, 0.5, "Team:", self.team),
                  (1, 2, 0.75, 0.5, "Paid Date:", None),
                  (0, 3, 1, 0.25, "Release Form:", None),
                  (1, 3, 1, 0.25, "Student Contract:", None)]:
@@ -435,10 +438,13 @@ class RegVerifyDocTemplate(BaseDocTemplate):
     def afterNextPage(self, canv, self2):
         pass
 
-    def handle_startPerson(self, firstname, lastname, suffix, adult):
+    def handle_startPerson(self, id, firstname, lastname, suffix, adult,
+                           team):
         #self.pageTemplate = self.pageTemplates[0]
         self.name = "%s, %s %s" % (lastname, firstname, suffix)
+        self.id = id
         self.adult = adult
+        self.team = team
 
 def person_to_pdf(elements, person, title, adult=False, parent=None,
                   contact=None):
@@ -519,11 +525,11 @@ def person_to_pdf(elements, person, title, adult=False, parent=None,
             data.append(("Shirt Size", "", person.shirt_size))
 
         # Parent specific info
-        if isinstance(parent, Relationship):
-            data.append(("Emergency Contact", "",
-                parent.emergency_contact and "Yes" or "No"))
-        elif parent:
-            data.append(("Emergency Contact", "", "Yes / No"))
+        #if isinstance(parent, Relationship):
+        #    data.append(("Emergency Contact", "",
+        #        parent.emergency_contact and "Yes" or "No"))
+        #elif parent:
+        #    data.append(("Emergency Contact", "", "Yes / No"))
 
         # Emails
         emails = PersonEmail.objects.filter(person=person)
@@ -549,7 +555,7 @@ def person_to_pdf(elements, person, title, adult=False, parent=None,
 
     # Phones
     phones = PersonPhone.objects.filter(person=person)
-    wanted_phone_locations = set([u'Cell', u'Home'])
+    wanted_phone_locations = set([u'Cell', u'Home', u'Work'])
     start = len(data)
     first = "Phone"
     for phone in phones:
@@ -560,7 +566,7 @@ def person_to_pdf(elements, person, title, adult=False, parent=None,
              phone.primary and " (primary)" or "")))
         first = ""
     for location in sorted(wanted_phone_locations):
-        highlight(style, data)
+        #highlight(style, data)
         data.append((first, location, ""))
         first = ""
     if len(data)-1 > start:
@@ -587,35 +593,20 @@ def person_to_pdf(elements, person, title, adult=False, parent=None,
         # Medical
         if not parent:
             style.add('SPAN', (0,len(data)), (0,len(data)+1))
-            if not person.medical:
-                highlight(style, data)
+            #if not person.medical:
+            #    highlight(style, data)
             data.append(("Medical", "Conditions/Allergies", person.medical))
-            if not person.medications:
-                highlight(style, data)
+            #if not person.medications:
+            #    highlight(style, data)
             data.append(("", "Medications", person.medications))
 
     elements.append(Table(data, colWidths=(0.75*inch, 1.25*inch, 5*inch),
                     style=style))
 
-@login_required(login_url='/roster/login/')
-def team_reg_verify(request):
-    """Team registration verification."""
-    if request.method != 'GET' or not request.GET:
-        form = TeamRegVerifyForm()
-        return render_to_response("roster/team_reg_verify.html", locals(),
-                                  context_instance=RequestContext(request))
-
-    form = TeamRegVerifyForm(request.GET)
-    if not form.is_valid():
-        return render_to_response("roster/team_reg_verify.html", locals(),
-                                  context_instance=RequestContext(request))
-
+def make_reg_verify_pdf(response, people):
     from datetime import date
     today = date.today()
 
-    # configure PDF output
-    response = HttpResponse(mimetype='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename=TeamRegVerify.pdf'
     doc = RegVerifyDocTemplate(response,
             pagesize=letter,
             allowSplitting=0,
@@ -635,18 +626,17 @@ def team_reg_verify(request):
 
     parent_relationships = RelationshipType.objects.filter(parent=True).values_list('id', flat=True)
 
-    people = PersonTeam.objects.filter(
-            role__in=form.data.getlist('who'),
-            status='Active',
-            team__in=form.data.getlist('team')).values('person')
-
-    people = Person.objects.filter(id__in=people)
-
     for person in people:
-        adult = (person.birth_year and person.birth_year > 100 and
+        adult = person.company or \
+                (person.birth_year and person.birth_year > 1900 and
                  (today.year - person.birth_year) > 20)
-        elements.append(StartPerson(person.firstname, person.lastname,
-                                    person.suffix, adult))
+        team = None
+        pts = PersonTeam.objects.filter(person=person, status='Active')
+        if pts:
+            team = "%s" % pts[0].team
+        elements.append(StartPerson(person.id, person.firstname,
+                                    person.lastname, person.suffix, adult,
+                                    team))
         person_to_pdf(elements, person,
                 "%s Information" % (adult and "Mentor" or "Student"),
                 adult=adult)
@@ -657,7 +647,7 @@ def team_reg_verify(request):
             # Parents
             parents = Relationship.objects.filter(
                     person_from=person,
-                    relationship__in=parent_relationships) \
+                    legal_guardian=True) \
                             .select_related('person_to')
             extra_parents = [1, 2]
             for parent in parents:
@@ -675,25 +665,50 @@ def team_reg_verify(request):
             parents = parents.values('id')
 
         # Emergency Contacts
-        contacts = Relationship.objects.filter(
-                person_from=person, emergency_contact=True) \
-                .exclude(id__in=parents) \
-                .select_related('person_to')
-        for contact in contacts:
-            person_to_pdf(elements, contact.person_to,
-                "Emergency Contact Information",
-                adult=True,
-                contact=contact)
-            elements.append(Paragraph("", normal_para_style))
-        if not contacts:
-            person_to_pdf(elements, None,
-                "Emergency Contact Information",
-                adult=True,
-                contact=True)
+        if adult:
+            contacts = Relationship.objects.filter(
+                    person_from=person, emergency_contact=True) \
+                    .exclude(id__in=parents) \
+                    .select_related('person_to')
+            for contact in contacts:
+                person_to_pdf(elements, contact.person_to,
+                    "Emergency Contact Information",
+                    adult=True,
+                    contact=contact)
+                elements.append(Paragraph("", normal_para_style))
+            if not contacts:
+                person_to_pdf(elements, None,
+                    "Emergency Contact Information",
+                    adult=True,
+                    contact=True)
         elements.append(PageBreak())
 
     # Generate the document
     doc.build(elements)
+
+@login_required(login_url='/roster/login/')
+def team_reg_verify(request):
+    """Team registration verification."""
+    if request.method != 'GET' or not request.GET:
+        form = TeamRegVerifyForm()
+        return render_to_response("roster/team_reg_verify.html", locals(),
+                                  context_instance=RequestContext(request))
+
+    form = TeamRegVerifyForm(request.GET)
+    if not form.is_valid():
+        return render_to_response("roster/team_reg_verify.html", locals(),
+                                  context_instance=RequestContext(request))
+
+    # configure PDF output
+    response = HttpResponse(mimetype='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename=TeamRegVerify.pdf'
+    people = PersonTeam.objects.filter(
+            role__in=form.data.getlist('who'),
+            status='Active',
+            team__in=form.data.getlist('team')).values('person')
+
+    people = Person.objects.filter(id__in=people)
+    make_reg_verify_pdf(response, people)
     return response
 
 @login_required(login_url='/roster/login/')
@@ -1020,4 +1035,430 @@ def badges(request):
     # Generate the document
     doc.build(elements)
     return response
+
+REG_FORMS = [
+        ("initial", RegInitialForm),
+        ("basic", RegBasicForm),
+        ("address", AddressForm),
+        ("phone", RegPhoneForm),
+        ("guardian1", RegGuardian1Form),
+        ("guardian1address", RegGuardian1AddressForm),
+        ("guardian1phone", RegPhoneForm),
+        ("guardian2", RegGuardian2Form),
+        ("guardian2address", RegGuardian2AddressForm),
+        ("guardian2phone", RegPhoneForm),
+        ("email", RegEmailForm),
+        ("emergency", RegEmergencyForm),
+        ("emergencyphone", RegPhoneForm),
+        ("team", RegTeamForm),
+        ]
+
+REG_TEMPLATES = {
+        "initial": "roster/reg/initial.html",
+        "basic": "roster/reg/basic.html",
+        "phone": "roster/reg/phone.html",
+        "guardian1": "roster/reg/guardian.html",
+        "guardian1address": "roster/reg/guardian_address.html",
+        "guardian1phone": "roster/reg/phone.html",
+        "guardian2": "roster/reg/guardian.html",
+        "guardian2address": "roster/reg/guardian_address.html",
+        "guardian2phone": "roster/reg/phone.html",
+        "email": "roster/reg/email.html",
+        "emergency": "roster/reg/guardian.html",
+        "emergencyphone": "roster/reg/phone.html",
+        }
+
+def show_reg_guardian_form_condition(wizard):
+    data = wizard.get_cleaned_data_for_step('basic') or {}
+    return data.get("association") != "mentor"
+
+def show_reg_guardian2_form_condition(wizard):
+    data = wizard.get_cleaned_data_for_step('guardian2') or {}
+    return data.get("guardian") is not None
+
+def show_reg_emergency_form_condition(wizard):
+    data = wizard.get_cleaned_data_for_step('basic') or {}
+    return data.get("association") == "mentor"
+
+def show_reg_team_form_condition(wizard):
+    data = wizard.get_cleaned_data_for_step('basic') or {}
+    return data.get("association") == "mentor"
+
+REG_COND = {
+        "guardian1": show_reg_guardian_form_condition,
+        "guardian1address": show_reg_guardian_form_condition,
+        "guardian1phone": show_reg_guardian_form_condition,
+        "guardian2": show_reg_guardian_form_condition,
+        "guardian2address": show_reg_guardian2_form_condition,
+        "guardian2phone": show_reg_guardian2_form_condition,
+        "emergency": show_reg_emergency_form_condition,
+        "emergencyphone": show_reg_emergency_form_condition,
+        "team": show_reg_team_form_condition,
+        }
+
+REG_DESCS = {
+        "initial": "Get Started",
+        "basic": "Member's Basic Information",
+        "guardian1": "Legal Guardian #1",
+        "guardian2": "Legal Guardian #2",
+        "email": "E-mail Addresses",
+        "emergency": "Emergency Contact",
+        "team": "Team Membership",
+        }
+
+class RegistrationWizard(SessionWizardView):
+    def get_template_names(self):
+        if self.steps.current in REG_TEMPLATES:
+            return [REG_TEMPLATES[self.steps.current]]
+        else:
+            return ["roster/reg/base.html"]
+
+    def get_person(self):
+        return self.storage.extra_data.get("person")
+
+    def get_form_initial(self, step):
+        newdata = super(RegistrationWizard, self).get_form_initial(step)
+        person = None
+        if step != 'initial':
+            person = self.get_person()
+            if person is None:
+                person = Person()
+        newdata["person"] = person
+        if step == 'basic':
+            newdata["firstname"] = person.firstname
+            newdata["lastname"] = person.lastname
+            newdata["suffix"] = person.suffix
+            newdata["nickname"] = person.nickname
+            newdata["gender"] = person.gender
+            newdata["birth_month"] = person.birth_month
+            newdata["birth_day"] = person.birth_day
+            newdata["birth_year"] = person.birth_year
+            newdata["company"] = person.company
+            newdata["school"] = person.school
+            newdata["grad_year"] = person.grad_year
+            newdata["shirt_size"] = person.shirt_size
+            newdata["medical"] = person.medical
+            newdata["medications"] = person.medications
+            if person.company:
+                newdata["association"] = "mentor"
+            elif person.school:
+                newdata["association"] = "student"
+        elif step == 'phone':
+            newdata["primary"] = "Mobile"
+            for pp in PersonPhone.objects.filter(person=person):
+                location = pp.phone.location.lower()
+                newdata[location+"_phone"] = pp.phone.phone
+                newdata[location+"_ext"] = pp.phone.ext
+                if pp.primary:
+                    newdata["primary"] = pp.phone.location
+        elif step == 'guardian1' or step == 'guardian2':
+            guardians = Relationship.objects.filter(person_from=person, legal_guardian=True).order_by('id')
+            n = int(step[-1:]) - 1
+            newdata["guardian"] = Person()
+            if len(guardians) > n:
+                newdata["relationship"] = guardians[n].relationship
+                guardian = guardians[n].person_to
+                newdata["guardian"] = guardian
+                newdata["firstname"] = guardian.firstname
+                newdata["lastname"] = guardian.lastname
+                newdata["suffix"] = guardian.suffix
+                newdata["nickname"] = guardian.nickname
+                newdata["gender"] = guardian.gender
+                newdata["company"] = guardian.company
+            elif person.id and step == 'guardian2':
+                newdata["only_one_guardian"] = True
+        elif step == 'emergency':
+            guardians = Relationship.objects.filter(person_from=person, emergency_contact=True).order_by('id')
+            newdata["guardian"] = Person()
+            if len(guardians) > 0:
+                newdata["relationship"] = guardians[0].relationship
+                guardian = guardians[0].person_to
+                newdata["guardian"] = guardian
+                newdata["firstname"] = guardian.firstname
+                newdata["lastname"] = guardian.lastname
+                newdata["suffix"] = guardian.suffix
+                newdata["nickname"] = guardian.nickname
+                newdata["gender"] = guardian.gender
+                newdata["company"] = guardian.company
+        elif step == 'guardian1address' or step == "guardian2address":
+            newdata["student"] = self.storage.extra_data.get("address")
+            newdata["guardian1"] = None
+            if step == "guardian2address":
+                guardian1data = self.get_cleaned_data_for_step("guardian1address") or {}
+                newdata["guardian1"] = guardian1data.get("address")
+            guardiandata = self.get_cleaned_data_for_step(step[:-7]) or {}
+            guardian = guardiandata.get("guardian")
+            if guardian and guardian.id and guardian.addresses.all():
+                address = guardian.addresses.all()[0]
+                if address == newdata["student"]:
+                    newdata["address_type"] = "same"
+                elif address == newdata["guardian1"]:
+                    newdata["address_type"] = "same1"
+                else:
+                    newdata["address_type"] = "new"
+                    newdata["address"] = address
+                    newdata["line1"] = address.line1
+                    newdata["line2"] = address.line2
+                    newdata["city"] = address.city
+                    newdata["state"] = address.state
+                    newdata["zipcode"] = address.zipcode
+        elif step == 'guardian1phone' or step == 'guardian2phone' or step == 'emergencyphone':
+            guardiandata = self.get_cleaned_data_for_step(step[:-5]) or {}
+            guardian = guardiandata.get("guardian")
+            newdata["primary"] = "Mobile"
+            for pp in PersonPhone.objects.filter(person=guardian):
+                location = pp.phone.location.lower()
+                newdata[location+"_phone"] = pp.phone.phone
+                newdata[location+"_ext"] = pp.phone.ext
+                if pp.primary:
+                    newdata["primary"] = pp.phone.location
+        elif step == "email":
+            # person email
+            emails = PersonEmail.objects.filter(person=person, primary=True)
+            if emails:
+                newdata["email"] = emails[0].email
+            # guardian emails
+            guardians = Relationship.objects.filter(person_from=person, legal_guardian=True).order_by('id')
+            for n in range(1, 3):
+                guardiandata = self.get_cleaned_data_for_step("guardian%d" % n) or {}
+                guardian = guardiandata.get("guardian")
+                newdata["guardian%d" % n] = guardian
+                if guardian:
+                    emails = PersonEmail.objects.filter(person=guardian, primary=True)
+                    if emails:
+                        newdata["guardian%d_email" % n] = emails[0].email
+                if len(guardians) > n:
+                    newdata["guardian%d_cc" % n] = guardians[n-1].cc_on_email
+        elif step == "team":
+            teams = PersonTeam.objects.filter(person=person, team__reg_show=True).order_by("status")
+            if teams:
+                newdata["team"] = teams[0].team
+        return newdata
+
+    def get_form_kwargs(self, step):
+        if step == 'basic':
+            # make sure current grad_year is populated
+            person = self.get_person()
+            if person:
+                kwargs = {}
+                kwargs["force_grad_year"] = person.grad_year
+                return kwargs
+        return super(RegistrationWizard, self).get_form_kwargs(step)
+
+    def get_form_instance(self, step):
+        if step == 'address':
+            person = self.get_person()
+            if person.id:
+                addresses = person.addresses.all() or [None]
+                return addresses[0]
+        return super(RegistrationWizard, self).get_form_instance(step)
+
+    def save_address(self, person, address):
+        existing_addresses = Address.objects.filter(
+                line1=address.line1,
+                line2=address.line2,
+                city=address.city,
+                state=address.state,
+                zipcode=address.zipcode)
+        if existing_addresses:
+            address = existing_addresses[0]
+        else:
+            address.save()
+        person.addresses.clear()
+        person.addresses.add(address)
+
+    def save_email(self, person, address):
+        existing_emails = Email.objects.filter(email=address)
+        if existing_emails:
+            email = existing_emails[0]
+        else:
+            email = Email(email=address, location="Other")
+            email.save()
+        person.emails.clear()
+        pe = PersonEmail(person=person, email=email)
+        pe.save()
+
+    def save_phones(self, person, phonestep):
+        formdata = self.get_cleaned_data_for_step(phonestep) or {}
+        primary = formdata.get("primary")
+        person.phones.clear()
+        for loc, alias in Phone.LOCATION_CHOICES:
+            number = formdata.get("%s_phone" % loc.lower(), "")
+            ext = formdata.get("%s_ext" % loc.lower(), "")
+            if not number:
+                continue
+            phones = Phone.objects.filter(phone=number, ext=ext)
+            if phones:
+                phone = phones[0]
+                phone.location = loc
+            else:
+                phone = Phone(phone=number, ext=ext, location=loc)
+            phone.save()
+            pp = PersonPhone(person=person, phone=phone,
+                    primary=(loc==primary))
+            pp.save()
+
+    @transaction.commit_on_success
+    def done(self, form_list, **kwargs):
+        person = self.get_person()
+
+        # Save person
+        formdata = self.get_cleaned_data_for_step("basic") or {}
+        association = formdata.get("association")
+        company = formdata.get("company")
+        if company is not None:
+            company.save()
+            person.company = company
+        person.save()
+
+        # person address
+        address = self.storage.extra_data.get("address")
+        self.save_address(person, address)
+
+        # person phones
+        self.save_phones(person, "phone")
+
+        # emails
+        formdata = self.get_cleaned_data_for_step("email") or {}
+        person_email = formdata.get("email")
+        guardian_email = [(formdata.get("guardian%d_email" % n),
+                           formdata.get("guardian%d_cc" % n))
+                          for n in range(1, 3)]
+        self.save_email(person, person_email)
+
+        # guardians/emergency contact
+        Relationship.objects.filter(person_from=person).delete()
+        if association == "mentor":
+            # emergency contact person
+            formdata = self.get_cleaned_data_for_step("emergency") or {}
+            contact = formdata.get("guardian")
+            relationship = formdata.get("relationship")
+            contact.save()
+
+            # emergency contact phones
+            self.save_phones(contact, "emergencyphone")
+
+            # save relationship
+            rel = Relationship(person_from=person, person_to=contact,
+                    relationship=relationship, emergency_contact=True)
+            rel.save()
+            # save inverse relationship
+            if relationship.inverse:
+                Relationship.objects.filter(person_from=contact,
+                        person_to=person).delete()
+                rel = Relationship(person_from=contact, person_to=person,
+                        relationship=relationship.inverse)
+                rel.save()
+        else:
+            for n in range(1, 3):
+                # guardian person
+                formdata = self.get_cleaned_data_for_step("guardian%d" % n) or {}
+                guardian = formdata.get("guardian")
+                if guardian is None:
+                    continue
+                relationship = formdata.get("relationship")
+                company = formdata.get("company")
+                if company is not None:
+                    company.save()
+                    guardian.company = company
+                guardian.save()
+
+                # guardian address
+                formdata = self.get_cleaned_data_for_step("guardian%daddress" % n) or {}
+                address = formdata.get("address")
+                self.save_address(guardian, address)
+
+                # guardian phones
+                self.save_phones(guardian, "guardian%dphone" % n)
+
+                # guardian email
+                cc_on_email = False
+                if guardian_email[n-1][0]:
+                    self.save_email(guardian, guardian_email[n-1][0])
+                    cc_on_email = bool(guardian_email[n-1][1])
+
+                # save relationship
+                rel = Relationship(person_from=person, person_to=guardian,
+                        relationship=relationship, legal_guardian=True,
+                        emergency_contact=True, cc_on_email=cc_on_email)
+                rel.save()
+                # save inverse relationship
+                if relationship.inverse:
+                    Relationship.objects.filter(person_from=guardian,
+                            person_to=person).delete()
+                    rel = Relationship(person_from=guardian, person_to=person,
+                            relationship=relationship.inverse)
+                    rel.save()
+
+        # update team relationship
+        if association == "mentor":
+            formdata = self.get_cleaned_data_for_step("team") or {}
+            team = formdata.get("team")
+            role = "Mentor"
+        else:
+            team = None
+            role = "Student"
+            # determine team from grade
+            import datetime
+            now = datetime.datetime.now()
+            year = now.year
+            if now.month > 6:
+                year += 1
+            year2grade = dict((year-x+12, x) for x in range(12,3,-1))
+            grade = year2grade.get(person.grad_year)
+            if grade:
+                teams = Team.objects.filter(reg_default=True,
+                        program__grade_start__lte=grade,
+                        program__grade_end__gte=grade)
+                if teams:
+                    team = teams[0]
+
+        if team:
+            try:
+                pt = PersonTeam.objects.get(person=person, team=team)
+            except PersonTeam.DoesNotExist:
+                from datetime import date
+                pt = PersonTeam(person=person, team=team,
+                        joined=date.today())
+            pt.role = role
+            pt.status = "Active"
+            pt.save()
+
+        response = HttpResponse(mimetype='application/pdf')
+        response['Content-Disposition'] = \
+                'attachment; filename=RegVerify%d.pdf' % person.id
+        make_reg_verify_pdf(response, [person])
+        return response
+
+    def process_step(self, form):
+        extra_data = self.storage.extra_data
+        if self.steps.current == "initial":
+            person = form.cleaned_data.get("person")
+            extra_data["person"] = person
+        elif self.steps.current == "address":
+            extra_data["address"] = form.save(commit=False)
+        self.storage.extra_data = extra_data
+        return self.get_form_step_data(form)
+
+    def get_context_data(self, form, **kwargs):
+        context = super(RegistrationWizard, self).get_context_data(form=form, **kwargs)
+        desc = "?"
+        if self.steps.current in REG_DESCS:
+            desc = REG_DESCS[self.steps.current]
+        elif self.steps.current == "phone":
+            desc = "%s's Phone Numbers" % self.get_person()
+        elif self.steps.current == "address":
+            desc = "%s's Address" % self.get_person()
+        elif self.steps.current == "guardian1phone" or self.steps.current == "guardian2phone" or self.steps.current == "emergencyphone":
+            guardiandata = self.get_cleaned_data_for_step(self.steps.current[:-5]) or {}
+            desc = "%s's Phone Numbers" % guardiandata.get("guardian")
+        elif self.steps.current == "guardian1address" or self.steps.current == "guardian2address":
+            guardiandata = self.get_cleaned_data_for_step(self.steps.current[:-7]) or {}
+            desc = "%s's Address" % guardiandata.get("guardian")
+
+        context.update({'description': desc})
+        return context
+
+registration = RegistrationWizard.as_view(REG_FORMS, condition_dict=REG_COND)
+registration = login_required(registration, login_url='/roster/login/')
 

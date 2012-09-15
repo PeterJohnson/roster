@@ -1,0 +1,35 @@
+{% extends "roster/reg/base.html" %}
+
+{% block form %}
+<table>
+    <thead><tr><th>Location</th><th>Number</th><th>Ext</th><th>Primary</th><th></th></tr></thead>
+    <tr>
+	<td>Home</td>
+	<td><span{% if wizard.form.home_phone.errors %} class="error"{% endif %}>{{ wizard.form.home_phone }}</span></td>
+	<td></td>
+	<td align="center"><input {% if wizard.form.primary.value == "Home" %}checked="checked" {% endif %}type="radio" id="id_{{ wizard.form.prefix }}-primary_0" value="Home" name="{{ wizard.form.prefix }}-primary" /></td>
+	<td>{{ wizard.form.home_phone.errors }}</td>
+    </tr>
+    <tr>
+	<td>Cell</td>
+	<td><span{% if wizard.form.mobile_phone.errors %} class="error"{% endif %}>{{ wizard.form.mobile_phone }}</span></td>
+	<td></td>
+	<td align="center"><input {% if wizard.form.primary.value == "Mobile" %}checked="checked" {% endif %}type="radio" id="id_{{ wizard.form.prefix }}-primary_1" value="Mobile" name="{{ wizard.form.prefix }}-primary" /></td>
+	<td>{{ wizard.form.mobile_phone.errors }}</td>
+    </tr>
+    <tr>
+	<td>Work</td>
+	<td><span{% if wizard.form.work_phone.errors %} class="error"{% endif %}>{{ wizard.form.work_phone }}</span></td>
+	<td><span{% if wizard.form.work_ext.errors %} class="error"{% endif %}>{{ wizard.form.work_ext }}</span></td>
+	<td align="center"><input {% if wizard.form.primary.value == "Work" %}checked="checked" {% endif %}type="radio" id="id_{{ wizard.form.prefix }}-primary_2" value="Work" name="{{ wizard.form.prefix }}-primary" /></td>
+	<td>{{ wizard.form.work_phone.errors }} {{ wizard.form.work_ext.errors }}</td>
+    </tr>
+    <tr>
+	<td>Other</td>
+	<td><span{% if wizard.form.other_phone.errors %} class="error"{% endif %}>{{ wizard.form.other_phone }}</span></td>
+	<td><span{% if wizard.form.other_ext.errors %} class="error"{% endif %}>{{ wizard.form.other_ext }}</span></td>
+	<td align="center"><input {% if wizard.form.primary.value == "Other" %}checked="checked" {% endif %}type="radio" id="id_{{ wizard.form.prefix }}-primary_3" value="Other" name="{{ wizard.form.prefix }}-primary" /></td>
+	<td>{{ wizard.form.other_phone.errors }} {{ wizard.form.other_ext.errors }}</td>
+    </tr>
+</table>
+{% endblock %}

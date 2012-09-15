@@ -1,0 +1,119 @@
+{% extends "roster/reg/base.html" %}
+
+{% block script %}
+<script>
+$("#id_guardian1address-address_type_0").click(function () {
+    $("#new").hide();
+    $("#same1").hide();
+    $("#same").show();
+});
+$("#id_guardian1address-address_type_1").click(function () {
+    $("#same1").hide();
+    $("#same").hide();
+    $("#new").show();
+});
+$("#id_guardian2address-address_type_0").click(function () {
+    $("#new").hide();
+    $("#same1").hide();
+    $("#same").show();
+});
+$("#id_guardian2address-address_type_1").click(function () {
+    $("#same1").hide();
+    $("#same").hide();
+    $("#new").show();
+});
+$("#id_guardian2address-address_type_2").click(function () {
+    $("#same").hide();
+    $("#new").hide();
+    $("#same1").show();
+});
+$(document).ready(function () {
+    if ($('#id_guardian1address-address_type_0').is(':checked') ||
+	$('#id_guardian2address-address_type_0').is(':checked')) {
+	$("#new").hide();
+	$("#same1").hide();
+	$("#same").show();
+    } else if ($('#id_guardian1address-address_type_1').is(':checked') ||
+	       $('#id_guardian2address-address_type_1').is(':checked')) {
+	$("#same1").hide();
+	$("#same").hide();
+	$("#new").show();
+    } else {
+	$("#same").hide();
+	$("#new").hide();
+	$("#same1").show();
+    }
+});
+</script>
+{% endblock %}
+
+{% block form %}
+<table>
+    <tr>
+	<td><span{% if wizard.form.address_type.errors %} class="error"{% endif %}>{{ wizard.form.address_type }}</span></td>
+	<td>{{ wizard.form.address_type.errors }}</td>
+    </tr>
+</table>
+<table id="same" style="border-style: solid; border-width: 1px">
+    <tr>
+	<td>{{ wizard.form.initial.student.line1 }}</td>
+    </tr>
+{% if wizard.form.initial.student.line2 %}
+    <tr>
+	<td>{{ wizard.form.initial.student.line2 }}</td>
+    </tr>
+{% endif %}
+    <tr>
+	<td>{{ wizard.form.initial.student.city }},
+	    {{ wizard.form.initial.student.state }}
+	    {{ wizard.form.initial.student.zipcode }}</td>
+    </tr>
+</table>
+<table id="new">
+    <tr>
+	<th>{{ wizard.form.line1.label_tag }}:</th>
+	<td><span{% if wizard.form.line1.errors %} class="error"{% endif %}>{{ wizard.form.line1 }}</span></td>
+	<td><span class="required_field">*</span></td>
+	<td>{{ wizard.form.line1.errors }}</td>
+    </tr>
+    <tr>
+	<th>{{ wizard.form.line2.label_tag }}:</th>
+	<td><span{% if wizard.form.line2.errors %} class="error"{% endif %}>{{ wizard.form.line2 }}</span></td>
+	<td></td>
+	<td>{{ wizard.form.line2.errors }}</td>
+    </tr>
+    <tr>
+	<th>{{ wizard.form.city.label_tag }}:</th>
+	<td{% if wizard.form.city.errors %} class="error"{% endif %}>{{ wizard.form.city }}</td>
+	<td><span class="required_field">*</span></td>
+	<td>{{ wizard.form.city.errors }}</td>
+    </tr>
+    <tr>
+	<th>{{ wizard.form.state.label_tag }}:</th>
+	<td{% if wizard.form.state.errors %} class="error"{% endif %}>{{ wizard.form.state }}</td>
+	<td><span class="required_field">*</span></td>
+	<td>{{ wizard.form.state.errors }}</td>
+    </tr>
+    <tr>
+	<th>{{ wizard.form.zipcode.label_tag }}:</th>
+	<td{% if wizard.form.zipcode.errors %} class="error"{% endif %}>{{ wizard.form.zipcode }}</td>
+	<td><span class="required_field">*</span></td>
+	<td>{{ wizard.form.zipcode.errors }}</td>
+    </tr>
+</table>
+<table id="same1" style="border-style: solid; border-width: 1px">
+    <tr>
+	<td>{{ wizard.form.initial.guardian1.line1 }}</td>
+    </tr>
+{% if wizard.form.initial.guardian1.line2 %}
+    <tr>
+	<td>{{ wizard.form.initial.guardian1.line2 }}</td>
+    </tr>
+{% endif %}
+    <tr>
+	<td>{{ wizard.form.initial.guardian1.city }},
+	    {{ wizard.form.initial.guardian1.state }}
+	    {{ wizard.form.initial.guardian1.zipcode }}</td>
+    </tr>
+</table>
+{% endblock %}

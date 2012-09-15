@@ -1,0 +1,25 @@
+{% extends "roster/reg/base.html" %}
+
+{% block script %}
+<script>
+$("#id_initial-usertype_0").click(function () {
+   $("#personselect").hide();
+});
+$("#id_initial-usertype_1").click(function () {
+   $("#personselect").show();
+});
+</script>
+{% endblock %}
+
+{% block form %}
+<table>
+    <tr>
+	<td><span{% if wizard.form.usertype.errors %} class="error"{% endif %}>{{ wizard.form.usertype }}</span></td>
+	<td>{{ wizard.form.usertype.errors }}</td>
+    </tr>
+    <tr id="personselect">
+	<td><span{% if wizard.form.person.errors %} class="error"{% endif %}>{{ wizard.form.person }}</span></td>
+	<td>{{ wizard.form.person.errors }}</td>
+    </tr>
+</table>
+{% endblock %}

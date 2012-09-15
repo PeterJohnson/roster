@@ -131,12 +131,13 @@ class Address(models.Model):
 class Phone(models.Model):
     phone = PhoneNumberField("Phone Number")
     ext = models.CharField("Extension", max_length=5, blank=True)
-    location = models.CharField("Type", max_length=10, choices=(
+    LOCATION_CHOICES=(
         ('Home', "Home"),
         ('Mobile', "Cell"),
         ('Work', "Work"),
         ('Other', "Other"),
-    ))
+        )
+    location = models.CharField("Type", max_length=10, choices=LOCATION_CHOICES)
 
     def __unicode__(self):
         if self.ext:
