@@ -376,6 +376,7 @@ class Relationship(models.Model):
                                   related_name="relationship_from_set")
     relationship = models.ForeignKey(RelationshipType)
     cc_on_email = models.BooleanField("CC on Emails", default=False)
+    legal_guardian = models.BooleanField("Legal Guardian", default=False)
     emergency_contact = models.BooleanField("Emergency Contact", default=False)
 
     def __unicode__(self):
