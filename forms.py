@@ -109,6 +109,19 @@ class BadgesForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
         choices=[(x.id, x.name) for x in Team.objects.all()])
 
+class NewYearForm(forms.Form):
+    who = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=(
+            ('Mentor', "Mentor"),
+            ('Student', "Student"),
+        ),
+        initial=['Student'])
+
+    team = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=[(x.id, x.name) for x in Team.objects.filter(reg_show=True)])
+
 class AddressForm(forms.ModelForm):
     class Meta:
         model = Address

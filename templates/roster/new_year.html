@@ -1,0 +1,53 @@
+{% extends "roster/base.html" %}
+
+{% block content %}
+<div class="noprint">
+{% if actions %}
+<table id="action">
+{% for action in actions %}
+<tr>
+    <td>{{ action.person.render_normal }}</td>
+    <td>--&gt;</td>
+    <td>{{ action.status }}</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+<form method="get" action=".">
+<table id="new_year">
+    {{ form }}
+<tr>
+    <td colspan="2"><input type="submit" value="Search" /></td>
+</tr>
+</table>
+</form>
+{% if pts %}
+<script language="JavaScript">
+function toggle(source) {
+  checkboxes = document.getElementsByName('ids');
+  for(var i in checkboxes)
+    checkboxes[i].checked = source.checked;
+}
+</script>
+<form method="post" action=".">
+{% csrf_token %}
+<table id="pts">
+<tr>
+    <td><input id="toggleall" type="checkbox" onClick="toggle(this)" /></td>
+    <td><label for="toggleall"><b>Toggle All</b></label></td>
+</tr>
+{% for pt in pts %}
+<tr>
+    <td><input id="{{ pt.id }}" type="checkbox" name="ids" value="{{ pt.id }}" /></td>
+    <td><label for="{{ pt.id }}">{{ pt.person.render_normal }}</label></td>
+</tr>
+{% endfor %}
+<tr>
+    <td colspan="2"><input type="submit" value="Migrate" /></td>
+</tr>
+</table>
+</form>
+{% endif %}
+{% endif %}
+</div>
+{% endblock %}

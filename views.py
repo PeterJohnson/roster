@@ -1036,6 +1036,54 @@ def badges(request):
     doc.build(elements)
     return response
 
+@login_required(login_url='/roster/login/')
+def new_year(request):
+    if (request.method != 'GET' or not request.GET) and (request.method != 'POST' or not request.POST):
+        form = NewYearForm()
+        return render_to_response("roster/new_year.html", locals(),
+                                  context_instance=RequestContext(request))
+
+    ids = []
+    if request.POST:
+        ids = request.POST.getlist("ids")
+    if not ids:
+        form = NewYearForm(request.GET)
+        if not form.is_valid():
+            return render_to_response("roster/new_year.html", locals(),
+                                      context_instance=RequestContext(request))
+
+        # generate list of people
+        pts = PersonTeam.objects.filter(
+                role__in=form.data.getlist('who'),
+                status='Active',
+                team__in=form.data.getlist('team')).select_related('person').order_by("person__lastname", "person__firstname")
+        return render_to_response("roster/new_year.html", locals(),
+                                  context_instance=RequestContext(request))
+
+    pts = PersonTeam.objects.filter(id__in=[int(x) for x in ids])
+
+    actions = []
+    with transaction.commit_on_success():
+        for pt in pts:
+            pt.status = 'Pending'
+            if pt.person.grad_year:
+                # determine team from grade
+                import datetime
+                now = datetime.datetime.now()
+                year = now.year
+                if now.month > 6:
+                    year += 1
+                year2grade = dict((year-x+12, x) for x in range(12,3,-1))
+                grade = year2grade.get(pt.person.grad_year)
+                if not grade or grade > pt.team.program.grade_end:
+                    pt.status = 'Alumnus'
+                    pt.left = datetime.date.today()
+            actions.append(dict(person=pt.person, status=pt.status))
+            pt.save()
+
+    return render_to_response("roster/new_year.html", locals(),
+                              context_instance=RequestContext(request))
+
 REG_FORMS = [
         ("initial", RegInitialForm),
         ("basic", RegBasicForm),
