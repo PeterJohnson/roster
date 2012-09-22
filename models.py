@@ -331,6 +331,7 @@ class PersonTeam(models.Model):
 
     STATUS_CHOICES=(
         ('Prospective', "Prospective"),
+        ('Pending', "Pending"),
         ('Active', "Active"),
         ('Alumnus', "Alumnus"),
         ('Disinterested', "Disinterested"),
