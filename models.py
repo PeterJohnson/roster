@@ -38,6 +38,7 @@ class Team(models.Model):
     name = models.CharField("Name", max_length=20, unique=True)
     startdate = models.DateField("Start date")
     program = models.ForeignKey(Program)
+    reg_show = models.BooleanField("Show on registration form", default=True)
 
     def __unicode__(self):
         return self.name
