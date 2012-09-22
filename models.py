@@ -161,6 +161,7 @@ class RelationshipType(models.Model):
     type = models.CharField(max_length=30, unique=True)
     parent = models.BooleanField("Parent", default=False)
     sort_order = models.IntegerField("Sort order")
+    inverse = models.ForeignKey('self', null=True, blank=True)
 
     def __unicode__(self):
         return self.type
