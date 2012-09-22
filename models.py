@@ -22,6 +22,8 @@ class Program(models.Model):
     name = models.CharField("Name", max_length=20, unique=True)
     longname = models.CharField("Long name", max_length=50)
     org = models.ForeignKey(Organization)
+    grade_start = models.PositiveIntegerField("Starting grade (1-12)")
+    grade_end = models.PositiveIntegerField("Ending grade (1-12)")
 
     def __unicode__(self):
         return self.name
@@ -39,6 +41,7 @@ class Team(models.Model):
     startdate = models.DateField("Start date")
     program = models.ForeignKey(Program)
     reg_show = models.BooleanField("Show on registration form", default=True)
+    reg_default = models.BooleanField("Default team for registering students", default=False)
 
     def __unicode__(self):
         return self.name
