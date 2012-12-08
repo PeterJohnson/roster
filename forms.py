@@ -450,11 +450,11 @@ class RegGuardian1AddressForm(forms.Form):
         cleaned_data = super(RegGuardian1AddressForm, self).clean()
         address_type = cleaned_data.get("address_type")
         if address_type == "same":
-            address = self.initial["student"]
+            address = self.initial.get("student")
         elif address_type == "same1":
-            address = self.initial["guardian1"]
+            address = self.initial.get("guardian1")
         elif address_type == "new":
-            address = self.initial["address"]
+            address = self.initial.get("address")
             if not address:
                 address = Address()
             address.line1 = cleaned_data.get("line1", "")
