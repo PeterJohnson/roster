@@ -271,8 +271,9 @@ def tshirt_list(request):
                 totals_dict[tot["shirt_size"]] = tot["shirt_size__count"]
 
             totals = []
-            totals.append(dict(shirt_size="",
-                               shirt_size__count=totals_dict[""]))
+            if "" in totals_dict:
+                totals.append(dict(shirt_size="",
+                                   shirt_size__count=totals_dict[""]))
             for size_short, size_long in Person.SHIRT_SIZE_CHOICES:
                 if size_short not in totals_dict:
                     continue
