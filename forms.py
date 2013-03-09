@@ -54,6 +54,24 @@ class ContactListForm(TeamReportForm):
 class TshirtListForm(TeamReportForm):
     pass
 
+class HoursListForm(forms.Form):
+    who = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=(
+            ('Mentor', "Mentor"),
+            ('Student', "Student"),
+        ),
+        initial=['Mentor', 'Student'])
+
+    team = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        choices=[(x.id, x.name) for x in Team.objects.all()])
+
+    from_date = forms.DateField(required=False)
+    to_date = forms.DateField(required=False)
+
+    include_hours = forms.BooleanField(required=False, initial=True)
+
 class EventEmailListForm(forms.Form):
     who = forms.MultipleChoiceField(
         widget=forms.CheckboxSelectMultiple,

@@ -4,7 +4,7 @@ from django.utils.html import escape, linebreaks
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Sum
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.contrib.formtools.wizard.views import SessionWizardView
@@ -284,6 +284,40 @@ def tshirt_list(request):
         form = TshirtListForm()
 
     return render_to_response("roster/tshirt_list.html", locals(),
+                              context_instance=RequestContext(request))
+
+@login_required(login_url='/roster/login/')
+def hours_list(request):
+    """Team hours list."""
+
+    if request.method == 'GET' and request.GET:
+        form = HoursListForm(request.GET)
+        if form.is_valid():
+            who = set(form.data.getlist('who'))
+
+            people = PersonTeam.objects.filter(role__in=who,
+                    status='Active',
+                    team__in=form.data.getlist('team')).values('person')
+
+            results = Person.objects.filter(id__in=people)
+
+            from_date = form.cleaned_data.get('from_date', None)
+            to_date = form.cleaned_data.get('to_date', None)
+            if from_date and to_date:
+                results = results.filter(timerecord__clock_in__range=(from_date, to_date))
+            elif from_date:
+                results = results.filter(timerecord__clock_in__gt=from_date)
+            elif to_date:
+                results = results.filter(timerecord__clock_in__lt=to_date)
+
+            results = results.annotate(total_hours=Sum('timerecord__hours')).order_by('-total_hours')
+
+            total = sum(x.total_hours for x in results)
+            show_hours = 'include_hours' in form.data
+    else:
+        form = HoursListForm()
+
+    return render_to_response("roster/hours_list.html", locals(),
                               context_instance=RequestContext(request))
 
 @login_required(login_url='/roster/login/')
