@@ -312,7 +312,7 @@ def hours_list(request):
 
             results = results.annotate(total_hours=Sum('timerecord__hours')).order_by('-total_hours')
 
-            total = sum(x.total_hours for x in results)
+            total = sum((x.total_hours or 0.0) for x in results)
             show_hours = 'include_hours' in form.data
     else:
         form = HoursListForm()
